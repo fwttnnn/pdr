@@ -9,6 +9,7 @@ Prerequisite
 Required for external Roblox development:
 
     - aftman <https://github.com/LPGhatguy/aftman>
+    - lune <https://github.com/lune-org/lune>
     - rojo <https://github.com/rojo-rbx/rojo>
 
 Installation
@@ -17,6 +18,13 @@ Installation
 You only need to do this only once:
 
     aftman install
+
+Building
+--------
+
+Build and save rbxl place:
+
+    rojo build -o Risperidone.rbxl
 
 Synchronize
 -----------
