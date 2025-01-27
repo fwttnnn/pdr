@@ -11,8 +11,19 @@ Required for external Roblox development:
     - aftman <https://github.com/LPGhatguy/aftman>
     - rojo <https://github.com/rojo-rbx/rojo>
 
+Installation
+------------
+
+You only need to do this only once:
+
+    aftman install
+
 Synchronize
 -----------
+
+To get the latest Workspace (map):
+
+    lune run scripts/sync.luau
 
 Spawn a rojo server:
 
