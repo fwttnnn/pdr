@@ -11,13 +11,11 @@ Required for external Roblox development:
     - aftman <https://github.com/LPGhatguy/aftman>
     - rojo <https://github.com/rojo-rbx/rojo>
 
-Building
---------
+Synchronize
+-----------
 
-Call rojo to build a Roblox game file:
-
-    rojo build -o "risperidone.rbxlx"
-
-Open the generated file in Roblox Studio then start rojo:
+Spawn a rojo server:
 
     rojo serve
+
+Then connect to the server from Roblox Studio <https://rojo.space/docs/v7/getting-started/installation/#installing-the-plugin>.
