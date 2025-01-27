@@ -2,3 +2,22 @@ Risperidone
 ===========
 
 Roblox game test playground.
+
+Prerequisite
+------------
+
+Required for external Roblox development:
+
+    - aftman <https://github.com/LPGhatguy/aftman>
+    - rojo <https://github.com/rojo-rbx/rojo>
+
+Building
+--------
+
+Call rojo to build a Roblox game file:
+
+    rojo build -o "risperidone.rbxlx"
+
+Open the generated file in Roblox Studio then start rojo:
+
+    rojo serve
