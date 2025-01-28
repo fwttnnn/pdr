@@ -2,6 +2,7 @@
     "name": "Risperidone",
     "tree": {
         "$className": "DataModel",
+        "$ignoreUnknownInstances": true,
         "Workspace": {
             "$path": "src/Workspace.rbxm"
         },
@@ -9,9 +10,13 @@
             "$path": "src/Lighting.rbxm"
         },
         "ServerScriptService": {
-            "$className": "ServerScriptService",
             "$ignoreUnknownInstances": true,
             "$path": "src/ServerScriptService"
+        },
+        "StarterGui": {
+            "$properties": {
+                "ScreenOrientation": "LandscapeRight"
+            }
         },
         "TextChatService": {
             "$path": "src/TextChatService.rbxm"
