@@ -12,6 +12,7 @@ Ragdoll.RAGDOLL_DEFAULT_ATTACHMENT_CONFIG = {
 function Ragdoll.init(character: Model, config)
     if not config then config = Ragdoll.RAGDOLL_DEFAULT_ATTACHMENT_CONFIG end
 
+    character:WaitForChild("Humanoid")
     character.Humanoid.BreakJointsOnDeath = false
     character.Humanoid.RequiresNeck = false
     character.Humanoid.PlatformStand = true
