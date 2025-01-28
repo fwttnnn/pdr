@@ -10,12 +10,16 @@
             "$path": "src/Lighting.rbxm"
         },
         "ServerScriptService": {
-            "$ignoreUnknownInstances": true,
             "$path": "src/ServerScriptService"
         },
         "StarterGui": {
             "$properties": {
                 "ScreenOrientation": "LandscapeRight"
+            }
+        },
+        "StarterPlayer": {
+            "StarterCharacterScripts": {
+                "$path": "src/StarterPlayer/StarterCharacterScripts"
             }
         },
         "TextChatService": {
