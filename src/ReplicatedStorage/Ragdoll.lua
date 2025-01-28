@@ -49,15 +49,26 @@ function Ragdoll.init(character: Model, config)
 end
 
 function Ragdoll:enable(character: Model)
+    if character:GetAttribute("Ragdoll") == nil then Ragdoll.init(character) end
+
     -- TODO
+    character:SetAttribute("Ragdoll", true)
 end
 
 function Ragdoll:disable(character: Model)
+    -- Most likely not gonna happen, but maybe you're dumb enough to call disable() first.
+    if character:GetAttribute("Ragdoll") == nil then Ragdoll.init(character) end
+
     -- TODO
+    character:SetAttribute("Ragdoll", false)
 end
 
 function Ragdoll:toggle(character: Model)
-    -- TODO
+    if character:GetAttribute("Ragdoll") then 
+        Ragdoll:disable(character) 
+    else 
+        Ragdoll:enable(character)
+    end
 end
 
 return Ragdoll

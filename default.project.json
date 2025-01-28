@@ -9,6 +9,9 @@
         "Lighting": {
             "$path": "src/Lighting.rbxm"
         },
+        "ReplicatedStorage": {
+            "$path": "src/ReplicatedStorage"
+        },
         "ServerScriptService": {
             "$path": "src/ServerScriptService"
         },
