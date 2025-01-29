@@ -46,6 +46,22 @@ function Ragdoll.init(character: Model, config)
         ballSocket.Attachment1.Parent = motor6d.Part1
 
         ballSocket.Parent = motor6d.Part0
+
+        local collision = Instance.new("Part")
+        collision.Name = "RagdollCollision"
+        -- collision.Transparency = 1
+        collision.Size = motor6d.Part1.Size / 2
+        collision.CFrame = motor6d.Part1.CFrame
+        collision.Parent = motor6d.Part1
+
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = collision
+
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = motor6d.Part1
+        weld.Part1 = collision
+        weld.Parent = motor6d.Part1
+
     end
 end
 
