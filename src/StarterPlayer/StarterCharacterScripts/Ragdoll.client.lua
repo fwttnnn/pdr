@@ -1,5 +1,3 @@
-local Ragdoll = require(game:GetService("ReplicatedStorage").Ragdoll)
-
 game:GetService("UserInputService").InputBegan:connect(function(input, e)
     if e then return end
 
