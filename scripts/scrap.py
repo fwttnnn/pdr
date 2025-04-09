@@ -14,9 +14,7 @@ def user_get_friends(user_id: int) -> list[int]:
     data = resp.json()
     return [user_detail["id"] for user_detail in data["data"]]
 
-def user_get_fav_games(user_id: int, _cursor: str = None) -> list[Any]:
-    if not _cursor: _cursor = ""
-
+def user_get_fav_games(user_id: int, _cursor: str = "") -> list[Any]:
     resp = requests.get(f"https://www.roblox.com/users/favorites/list-json?assetTypeId=9&cursor={_cursor}&itemsPerPage=100&userId={user_id}")
     data = resp.json()
     games: list[Any] = data["Data"]["Items"]
