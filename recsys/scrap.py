@@ -82,6 +82,7 @@ if __name__ == "__main__":
         games.add(game_id)
         csv_writer_games.writerow(game_get_details(game_id))
 
+    # TODO: this does not check for updated user games/friends
     if not (uid in users):
         csv_writer_users.writerow({"id": uid, "games": "|".join(map(str, __user_games)), "friends": "|".join(map(str, __user_friends))})
 

@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     csv.ensure_exist(CSV_GAMES_FILEPATH)
     games = csv.load(CSV_GAMES_FILEPATH)
-    game  = games[52-2]
+    game  = games[19-2]
 
     desc: str = game["description"]
     desc = re.sub(r"\\n", r"\n", desc.lower())
