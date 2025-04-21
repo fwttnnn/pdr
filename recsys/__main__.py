@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     desc = re.sub(r"\\n", r"\n", game["description"].lower())
 
-    doc = recsys.lemmatize(f"{game["name"].lower()} {desc}")
+    doc = recsys.lemmatize(f"{game["title"].lower()} {desc}")
     tokens = [token.lemma_ for token in doc
               if token.pos_ in {"NOUN", "PROPN", "ADJ", "VERB"} 
                  and len(token.lemma_) >= 3

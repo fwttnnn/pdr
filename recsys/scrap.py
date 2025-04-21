@@ -46,7 +46,7 @@ def game_get_details(game_id: int, retries: int = 0) -> dict:
     return {
         "id":            data["id"],
         "rpid":          data["rootPlaceId"],
-        "name":          emoji.replace_emoji(data["name"], ""),
+        "title":          emoji.replace_emoji(data["name"], ""),
         "description":   emoji.replace_emoji(re.sub(r"\r?\n", r"\\n", data["description"] or ""), ""),
         "genres":         "|".join(genres),
         "visits":        data["visits"],
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     games = csv_load_game_ids(CSV_GAMES_FILEPATH)
 
     (csv_fd_users, csv_writer_users) = csv.insert_headers(CSV_USERS_FILEPATH, ["id", "games", "friends"])
-    (csv_fd_games, csv_writer_games) = csv.insert_headers(CSV_GAMES_FILEPATH, ["id", "rpid", "name", "description", "genres", "visits", "favorite", "created", "updated"])
+    (csv_fd_games, csv_writer_games) = csv.insert_headers(CSV_GAMES_FILEPATH, ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
 
     __user_games = user_get_fav_games(uid)
     __user_friends = user_get_friends(uid)
