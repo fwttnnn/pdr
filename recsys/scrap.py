@@ -4,15 +4,11 @@
 A recursive Roblox game scraper based on user's fav list and it's friends.
 """
 
-import sys
 import time
 import re
-import io
-import os
 import requests
-import queue
-import csv
-from pprint import pprint
+import emoji
+from . import csv
 
 CSV_GAMES_FILEPATH = "data/games.csv"
 CSV_USERS_FILEPATH = "data/users.csv"
@@ -49,56 +45,32 @@ def game_get_details(game_id: int, retries: int = 0) -> dict:
 
     return {
         "id":            data["id"],
-        "name":          data["name"],
-        "description":   re.sub(r"\r?\n", r"\\n", data["description"] or ""),
+        "rpid":          data["rootPlaceId"],
+        "name":          emoji.replace_emoji(data["name"], ""),
+        "description":   emoji.replace_emoji(re.sub(r"\r?\n", r"\\n", data["description"] or ""), ""),
         "genres":         "|".join(genres),
         "visits":        data["visits"],
         "favorite":      data["favoritedCount"],
         "created":       data["created"],
         "updated":       data["updated"],
     }
+
+def csv_load_game_ids(path: str) -> set[int]:
+    return csv.load_nth_row(path, 0)
+
+def csv_load_user_ids(path: str) -> set[int]:
+    return csv.load_nth_row(path, 0)
         
-def csv_load_nth_row(path: str, nth: int) -> set[int]:
-    with open(path, mode="r", newline="", encoding="utf-8") as f:
-        reader = csv.reader(f)
-
-        ids = [row[nth] for row in reader]
-        if len(ids) >= 1:
-            ids.pop(0)
-
-        return set(map(int, ids))
-
-    return set()
-
-def csv_insert_headers(path: str, headers: list[str]) -> tuple[io.TextIOWrapper, csv.DictWriter]:
-    f = open(path, mode="a", newline="", encoding="utf-8")
-    w = csv.DictWriter(f, fieldnames=headers)
-
-    if os.stat(path).st_size == 0:
-        w.writeheader()
-
-    return f, w
-
-def csv_load_game_ids(path: str = CSV_GAMES_FILEPATH) -> set[int]:
-    return csv_load_nth_row(path, 0)
-
-def csv_load_user_ids(path: str = CSV_USERS_FILEPATH) -> set[int]:
-    return csv_load_nth_row(path, 0)
-
-def csv_ensure_exist(path: str) -> None:
-    if not os.path.exists(path):
-        open(path, "w").close()
-
 if __name__ == "__main__":
-    csv_ensure_exist(CSV_USERS_FILEPATH)
-    csv_ensure_exist(CSV_GAMES_FILEPATH)
+    csv.ensure_exist(CSV_USERS_FILEPATH)
+    csv.ensure_exist(CSV_GAMES_FILEPATH)
 
     uid = 1531539874
-    users = csv_load_user_ids()
-    games = csv_load_game_ids()
+    users = csv_load_user_ids(CSV_USERS_FILEPATH)
+    games = csv_load_game_ids(CSV_GAMES_FILEPATH)
 
-    (csv_fd_users, csv_writer_users) = csv_insert_headers(CSV_USERS_FILEPATH, ["id", "games", "friends"])
-    (csv_fd_games, csv_writer_games) = csv_insert_headers(CSV_GAMES_FILEPATH, ["id", "name", "description", "genres", "visits", "favorite", "created", "updated"])
+    (csv_fd_users, csv_writer_users) = csv.insert_headers(CSV_USERS_FILEPATH, ["id", "games", "friends"])
+    (csv_fd_games, csv_writer_games) = csv.insert_headers(CSV_GAMES_FILEPATH, ["id", "rpid", "name", "description", "genres", "visits", "favorite", "created", "updated"])
 
     __user_games = user_get_fav_games(uid)
     __user_friends = user_get_friends(uid)
@@ -115,4 +87,3 @@ if __name__ == "__main__":
 
     csv_fd_games.close()
     csv_fd_users.close()
-    sys.exit(0)
