@@ -2,7 +2,7 @@ import csv
 import io
 import os
 
-def load(path: str) -> list:
+def load(path: str) -> list[str]:
     with open(path, mode="r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         return [row for row in reader]

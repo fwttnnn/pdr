@@ -14,12 +14,11 @@ if __name__ == "__main__":
 
     csv.ensure_exist(CSV_GAMES_FILEPATH)
     games = csv.load(CSV_GAMES_FILEPATH)
-    game  = games[19-2]
+    game  = games[5-2]
 
-    desc: str = game["description"]
-    desc = re.sub(r"\\n", r"\n", desc.lower())
+    desc = re.sub(r"\\n", r"\n", game["description"].lower())
 
-    doc = recsys.lemmatize(desc)
+    doc = recsys.lemmatize(game["name"].lower() + desc)
     tokens = [token.lemma_ for token in doc 
               if token.pos_ in {"NOUN", "PROPN", "ADJ", "VERB"} 
                  and len(token.lemma_) >= 3
