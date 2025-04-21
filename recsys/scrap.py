@@ -46,8 +46,8 @@ def game_get_details(game_id: int, retries: int = 0) -> dict:
     return {
         "id":            data["id"],
         "rpid":          data["rootPlaceId"],
-        "title":          emoji.replace_emoji(data["name"], ""),
-        "description":   emoji.replace_emoji(re.sub(r"\r?\n", r"\\n", data["description"] or ""), ""),
+        "title":         emoji.replace_emoji(data["name"], r"").strip(),
+        "description":   emoji.replace_emoji(re.sub(r"\r?\n", r"\\n", data["description"] or ""), r"").strip(),
         "genres":         "|".join(genres),
         "visits":        data["visits"],
         "favorite":      data["favoritedCount"],
