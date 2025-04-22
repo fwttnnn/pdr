@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-A recursive Roblox game scraper based on user's fav list and it's friends.
+A recursive Roblox game scraper based on user's fav list and badges.
 """
 
 import sys, pathlib
