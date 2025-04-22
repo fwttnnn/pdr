@@ -28,6 +28,16 @@ def user_get_fav_games(user_id: int, _cursor: str = "") -> list[int]:
 
     return games
 
+def user_get_hist_games(user_id: int, _cursor: str = "") -> list[int]:
+    resp = requests.get(f"https://badges.roblox.com/v1/users/{user_id}/badges?limit=100&sortOrder=Desc&cursor={_cursor}")
+    data = resp.json()
+    games: list[int] = list(set([badge["awarder"]["id"] for badge in data["data"]]))
+
+    if data["data"]["nextPageCursor"]:
+        games.extend(user_get_hist_games(user_id, _cursor=data["data"]["nextPageCursor"]))
+
+    return games
+
 def game_get_details(game_id: int, retries: int = 0) -> dict:
     resp = requests.get(f"https://games.roblox.com/v1/games?universeIds={game_id}")
     data = resp.json()
@@ -69,10 +79,13 @@ if __name__ == "__main__":
     users = csv_load_user_ids(CSV_USERS_FILEPATH)
     games = csv_load_game_ids(CSV_GAMES_FILEPATH)
 
-    (csv_fd_users, csv_writer_users) = csv.insert_headers(CSV_USERS_FILEPATH, ["id", "games", "friends"])
+    (csv_fd_users, csv_writer_users) = csv.insert_headers(CSV_USERS_FILEPATH, ["id", "favorites", "history", "friends"])
     (csv_fd_games, csv_writer_games) = csv.insert_headers(CSV_GAMES_FILEPATH, ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
 
-    __user_games = user_get_fav_games(uid)
+    __user_fav_games = user_get_fav_games(uid)
+    __user_hist_games = user_get_hist_games(uid)
+
+    __user_games = __user_fav_games + __user_hist_games
     __user_friends = user_get_friends(uid)
 
     for game_id in __user_games:
@@ -84,7 +97,10 @@ if __name__ == "__main__":
 
     # TODO: this does not check for updated user games/friends
     if not (uid in users):
-        csv_writer_users.writerow({"id": uid, "games": "|".join(map(str, __user_games)), "friends": "|".join(map(str, __user_friends))})
+        csv_writer_users.writerow({"id":        uid, 
+                                   "favorites": "|".join(map(str, __user_fav_games)), 
+                                   "history":   "|".join(map(str, __user_hist_games)),
+                                   "friends":   "|".join(map(str, __user_friends))})
 
     csv_fd_games.close()
     csv_fd_users.close()
