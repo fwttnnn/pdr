@@ -6,7 +6,6 @@ Recommender system for Roblox.
 
 if __name__ == "__main__":
     import recsys
-    import re
     from . import csv
 
     CSV_GAMES_FILEPATH = "data/games.csv"

@@ -6,8 +6,8 @@ __nlp: spacy.Language        = None
 __model: SentenceTransformer = None
 
 def __nlp_load():
+    global __nlp
     __nlp = spacy.load("en_core_web_sm")
-    return __nlp
 
 def lemmatize(game: dict[str, str]) -> str:
     if not __nlp:
@@ -27,8 +27,8 @@ def lemmatize(game: dict[str, str]) -> str:
     return " ".join(dict.fromkeys(tokens))
 
 def __model_load():
+    global __model
     __model = SentenceTransformer("all-MiniLM-L6-v2")
-    return __model
 
 def similar(games: list[list[dict[str, str]]], nth: int, k: int = 10) -> list[str]:
     if not __model:
