@@ -15,7 +15,7 @@ CSV_USERS_FILEPATH = "data/users.csv"
 
 def user_get_friends(user_id: int) -> list[int]:
     resp = requests.get(f"https://friends.roblox.com/v1/users/{user_id}/friends").json()
-    return [user_detail["id"] for user_detail in data["data"]]
+    return [user_detail["id"] for user_detail in resp["data"]]
 
 def user_get_fav_games(user_id: int, _cursor: str = "") -> list[int]:
     resp = requests.get(f"https://www.roblox.com/users/favorites/list-json?assetTypeId=9&cursor={_cursor}&itemsPerPage=100&userId={user_id}").json()
