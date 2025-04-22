@@ -30,7 +30,7 @@ def __model_load():
     global __model
     __model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def similar(games: list[list[dict[str, str]]], nth: int, k: int = 10) -> list[str]:
+def similar(games: list[dict[str, str]], nth: int, k: int = 10) -> list[str]:
     if not __model:
         __model_load()
 
