@@ -67,7 +67,7 @@ def game_convert_root_place_id(rpid: int) -> int:
     return resp["universeId"]
 
 def game_get_details(game_ids: list[int]) -> list[dict]:
-    N_GAMES_PER_CHUNK: int = 50
+    N_GAMES_PER_CHUNK: int = 50 # roblox's api docs says 100 is the limit, but we can only do 50
     chunks = [game_ids[i:i + N_GAMES_PER_CHUNK] for i in range(0, len(game_ids), N_GAMES_PER_CHUNK)]
 
     games = []
