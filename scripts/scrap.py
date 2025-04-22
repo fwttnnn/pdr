@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-A recursive Roblox game scraper based on user's fav list and badges.
+Roblox game scraper based on user's fav list and badges.
 
 NOTE: scrapping badges requires Roblox authentication, set all necessary cookie in 'rcookie.json.example' 
       then rename it as 'rcookie.json'
