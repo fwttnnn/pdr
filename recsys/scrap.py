@@ -14,55 +14,51 @@ CSV_GAMES_FILEPATH = "data/games.csv"
 CSV_USERS_FILEPATH = "data/users.csv"
 
 def user_get_friends(user_id: int) -> list[int]:
-    resp = requests.get(f"https://friends.roblox.com/v1/users/{user_id}/friends")
-    data = resp.json()
+    resp = requests.get(f"https://friends.roblox.com/v1/users/{user_id}/friends").json()
     return [user_detail["id"] for user_detail in data["data"]]
 
 def user_get_fav_games(user_id: int, _cursor: str = "") -> list[int]:
-    resp = requests.get(f"https://www.roblox.com/users/favorites/list-json?assetTypeId=9&cursor={_cursor}&itemsPerPage=100&userId={user_id}")
-    data = resp.json()
-    games: list[int] = [game["Item"]["UniverseId"] for game in data["Data"]["Items"]]
+    resp = requests.get(f"https://www.roblox.com/users/favorites/list-json?assetTypeId=9&cursor={_cursor}&itemsPerPage=100&userId={user_id}").json()
+    games: list[int] = [game["Item"]["UniverseId"] for game in resp["Data"]["Items"]]
 
-    if data["Data"]["NextCursor"]:
-        games.extend(user_get_fav_games(user_id, _cursor=data["Data"]["NextCursor"]))
+    if resp["Data"]["NextCursor"]:
+        games.extend(user_get_fav_games(user_id, _cursor=resp["Data"]["NextCursor"]))
 
     return games
 
 def user_get_hist_games(user_id: int, _cursor: str = "") -> list[int]:
-    resp = requests.get(f"https://badges.roblox.com/v1/users/{user_id}/badges?limit=100&sortOrder=Desc&cursor={_cursor}")
-    data = resp.json()
-    games: list[int] = list(set([badge["awarder"]["id"] for badge in data["data"]]))
+    resp = requests.get(f"https://badges.roblox.com/v1/users/{user_id}/badges?limit=100&sortOrder=Desc&cursor={_cursor}").json()
+    games: list[int] = list(set([badge["awarder"]["id"] for badge in resp["data"]]))
 
-    if data["data"]["nextPageCursor"]:
-        games.extend(user_get_hist_games(user_id, _cursor=data["data"]["nextPageCursor"]))
+    if resp["data"]["nextPageCursor"]:
+        games.extend(user_get_hist_games(user_id, _cursor=resp["data"]["nextPageCursor"]))
 
     return games
 
 def game_get_details(game_id: int, retries: int = 0) -> dict:
-    resp = requests.get(f"https://games.roblox.com/v1/games?universeIds={game_id}")
-    data = resp.json()
+    resp = requests.get(f"https://games.roblox.com/v1/games?universeIds={game_id}").json()
 
     # TODO: refactor
-    if "errors" in data:
+    if "errors" in resp:
         if retries >= 3:
             retries = -1
             time.sleep(.5)
 
         return game_get_details(game_id, retries + 1)
 
-    data: dict = data["data"][0]
-    genres: list = [data["genre"], data["genre_l1"], data["genre_l2"]]
+    detail: dict = resp["data"][0]
+    genres: list = [detail["genre"], detail["genre_l1"], detail["genre_l2"]]
 
     return {
-        "id":            data["id"],
-        "rpid":          data["rootPlaceId"],
-        "title":         emoji.replace_emoji(data["name"], r"").strip(),
-        "description":   emoji.replace_emoji(re.sub(r"\r?\n", r"\\n", data["description"] or ""), r"").strip(),
+        "id":            detail["id"],
+        "rpid":          detail["rootPlaceId"],
+        "title":         emoji.replace_emoji(detail["name"], r"").strip(),
+        "description":   emoji.replace_emoji(re.sub(r"\r?\n", r"\\n", detail["description"] or ""), r"").strip(),
         "genres":         "|".join(genres),
-        "visits":        data["visits"],
-        "favorite":      data["favoritedCount"],
-        "created":       data["created"],
-        "updated":       data["updated"],
+        "visits":        detail["visits"],
+        "favorite":      detail["favoritedCount"],
+        "created":       detail["created"],
+        "updated":       detail["updated"],
     }
 
 def csv_load_game_ids(path: str) -> set[int]:
