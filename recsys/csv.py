@@ -2,6 +2,9 @@ import csv
 import io
 import os
 
+CSV_GAMES_FILEPATH = "data/games.csv"
+CSV_USERS_FILEPATH = "data/users.csv"
+
 def load(path: str) -> list[dict[str, str]]:
     with open(path, mode="r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)

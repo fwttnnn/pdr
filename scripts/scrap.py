@@ -17,8 +17,6 @@ import requests
 import emoji
 import recsys.csv
 
-CSV_GAMES_FILEPATH = "data/games.csv"
-CSV_USERS_FILEPATH = "data/users.csv"
 __cookies: dict[str, str] = None
 
 def __load_roblox_cookies() -> dict[str, str]:
@@ -99,16 +97,16 @@ def csv_load_user_ids(path: str) -> set[int]:
 if __name__ == "__main__":
     OPT_SCRAP_FROM_USER_BADGES = True
 
-    recsys.csv.ensure_exist(CSV_USERS_FILEPATH)
-    recsys.csv.ensure_exist(CSV_GAMES_FILEPATH)
+    recsys.csv.ensure_exist(recsys.csv.CSV_USERS_FILEPATH)
+    recsys.csv.ensure_exist(recsys.csv.CSV_GAMES_FILEPATH)
 
     uid = 1531539874
-    users = csv_load_user_ids(CSV_USERS_FILEPATH)
-    games = csv_load_game_ids(CSV_GAMES_FILEPATH)
-    rpids = csv_load_root_game_ids(CSV_GAMES_FILEPATH)
+    users = csv_load_user_ids(recsys.csv.CSV_USERS_FILEPATH)
+    games = csv_load_game_ids(recsys.csv.CSV_GAMES_FILEPATH)
+    rpids = csv_load_root_game_ids(recsys.csv.CSV_GAMES_FILEPATH)
 
-    (csv_fd_users, csv_writer_users) = recsys.csv.insert_headers(CSV_USERS_FILEPATH, ["id", "favorites", "history", "friends"])
-    (csv_fd_games, csv_writer_games) = recsys.csv.insert_headers(CSV_GAMES_FILEPATH, ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
+    (csv_fd_users, csv_writer_users) = recsys.csv.insert_headers(recsys.csv.CSV_USERS_FILEPATH, ["id", "favorites", "history", "friends"])
+    (csv_fd_games, csv_writer_games) = recsys.csv.insert_headers(recsys.csv.CSV_GAMES_FILEPATH, ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
 
     __user_fav_games = user_get_fav_games(uid)
     __user_hist_games = []
