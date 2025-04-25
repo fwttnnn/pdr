@@ -2,31 +2,16 @@
 
 """
 Roblox game scraper based on user's fav list and badges.
-
-NOTE: scrapping badges requires Roblox authentication, set all necessary cookie in 'rcookie.json.example' 
-      then rename it as 'rcookie.json'
 """
 
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent))
 
 import time
-import json
 import re
 import requests
 import emoji
 import recsys.csv
-
-__cookies: dict[str, str] = None
-
-def __load_roblox_cookies() -> dict[str, str]:
-    global __cookies
-    if __cookies: return __cookies
-
-    with open("rcookie.json", "r") as f:
-        __cookies = json.load(f)
-
-    return __cookies
 
 def __roblox_api_get(url: str, cookies = None) -> dict:
     resp = requests.get(url, cookies=cookies).json()
@@ -34,6 +19,7 @@ def __roblox_api_get(url: str, cookies = None) -> dict:
     if "errors" in resp:
         time.sleep(.75)
         print(f"[ALERT!] Retrying.. {url}")
+        print("[INFO] ", resp)
         return __roblox_api_get(url)
     
     return resp
@@ -103,7 +89,6 @@ if __name__ == "__main__":
     uid = 1531539874
     users = csv_load_user_ids(recsys.csv.CSV_USERS_FILEPATH)
     games = csv_load_game_ids(recsys.csv.CSV_GAMES_FILEPATH)
-    rpids = csv_load_root_game_ids(recsys.csv.CSV_GAMES_FILEPATH)
 
     (csv_fd_users, csv_writer_users) = recsys.csv.insert_headers(recsys.csv.CSV_USERS_FILEPATH, ["id", "favorites", "history", "friends"])
     (csv_fd_games, csv_writer_games) = recsys.csv.insert_headers(recsys.csv.CSV_GAMES_FILEPATH, ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
@@ -111,7 +96,7 @@ if __name__ == "__main__":
     __user_fav_games = user_get_fav_games(uid)
     __user_hist_games = []
     if OPT_SCRAP_FROM_USER_BADGES:
-        __user_hist_games = [game_convert_root_place_id(rpid) for rpid in user_get_hist_games(uid) if rpid not in rpids or rpids.add(rpid)] 
+        __user_hist_games = [game_convert_root_place_id(rpid) for rpid in user_get_hist_games(uid)] 
 
     __user_friends = user_get_friends(uid)
 
