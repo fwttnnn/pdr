@@ -38,7 +38,7 @@ def user_get_fav_games(user_id: int, _cursor: str = "") -> list[int]:
     return games
 
 def user_get_hist_games(user_id: int, _cursor: str = "") -> list[int]:
-    resp = __roblox_api_get(f"https://badges.roblox.com/v1/users/{user_id}/badges?limit=100&sortOrder=Desc&cursor={_cursor}", cookies=__load_roblox_cookies())
+    resp = __roblox_api_get(f"https://badges.roblox.com/v1/users/{user_id}/badges?limit=100&sortOrder=Desc&cursor={_cursor}")
     games: list[int] = list(set([badge["awarder"]["id"] for badge in resp["data"]]))
 
     if resp["nextPageCursor"]:
