@@ -9,10 +9,9 @@ def lemmatize(game: dict[str, str]) -> str:
 
     tokens = [token.lemma_ for token in doc
             if token.pos_ in {"NOUN", "PROPN", "ADJ", "VERB"} 
-                and token.lemma_ not in {"roblox", "game"}
                 and len(token.lemma_) >= 3
                 and not token.like_url
                 and not token.like_email
                 and not token.like_num]
 
-    return " ".join(dict.fromkeys(tokens))
+    return " ".join(tokens)

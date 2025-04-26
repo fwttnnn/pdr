@@ -5,17 +5,9 @@ __dataset: dict[int, dict[str, str]] = {int(game["id"]): game for game in recsys
 def get(id: int) -> dict[str, str]:
     return __dataset[id]
 
-def to_list() -> list[dict[str, str]]:
-    return __dataset.values()
+def random() -> dict[str, str]:
+    import random
 
-def to_list_without(game_ids: list[int]) -> list[dict[str, str]]:
-    excludes = set(game_ids)
-    lst = []
-
-    for game in __dataset.values():
-        if int(game["id"]) in excludes:
-            continue
-
-        lst.append(game)
-    
-    return lst
+    ids = list(__dataset.keys())
+    id = ids[random.randint(0, len(ids))]
+    return __dataset[id]
