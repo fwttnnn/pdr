@@ -16,11 +16,10 @@ def __pre_compute_embeddings():
 
 def similar(game_id: int, k: int = 10) -> list[str]:
     __pre_compute_embeddings()
-    __game_id = str(game_id)
 
     similarities: list[tuple] = []
     for game in recsys.dataset.__games.values():
-        if game["id"] == __game_id:
+        if game["id"] == game_id:
             continue
 
         similarity = sentence_transformers.util.cos_sim(recsys.dataset.game_get(game_id)["__embed"], game["__embed"]).item()
@@ -32,7 +31,7 @@ def similar(game_id: int, k: int = 10) -> list[str]:
 def predict(game_ids: list[int], k: int = 5) -> list[str]:
     __pre_compute_embeddings()
 
-    game_ids = set(map(str, game_ids))
+    game_ids = set(game_ids)
     embeddings = [game["__embed"] for game in recsys.dataset.__games.values() if game["id"] in game_ids]
 
     predictions: list[tuple] = []
@@ -41,7 +40,7 @@ def predict(game_ids: list[int], k: int = 5) -> list[str]:
             continue
 
         similarities = [sentence_transformers.util.cos_sim(embedding, game["__embed"]).item() for embedding in embeddings]
-        predictions.append((torch.mean(torch.tensor(similarities)), game["title"]))
+        predictions.append((torch.mean(torch.tensor(similarities)), game["title"], game["id"]))
 
     # TODO: we should use sorted list
     return sorted(predictions, key=lambda x: x[0], reverse=True)[:k]
