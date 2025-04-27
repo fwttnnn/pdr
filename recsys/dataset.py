@@ -14,7 +14,7 @@ def __load():
         game["id"] = int(game["id"])
         game["rpid"] = int(game["rpid"])
         game["visits"] = int(game["visits"])
-        game["favorites"] = int(game["favorite"])
+        game["favorite"] = int(game["favorite"])
         __games[game["id"]] = game
 
     for user in recsys.csv.load(recsys.csv.CSV_USERS_FILEPATH):
@@ -29,6 +29,9 @@ def __load():
 __load()
 
 def __get(id: int, d: dict) -> dict:
+    if id not in d:
+        return None
+
     return d[id]
 
 def game_get(id: int) -> dict:

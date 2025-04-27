@@ -1,0 +1,5 @@
+sentence-transformers==4.1.0
+spacy==3.8.5
+starlette==0.46.2
+torch==2.6.0
+uvicorn==0.34.2
