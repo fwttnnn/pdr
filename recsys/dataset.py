@@ -7,6 +7,9 @@ __dataset: dict[str, dict] = {}
 def __load():
     global __games, __users, __dataset
 
+    recsys.csv.ensure_exist(recsys.csv.CSV_GAMES_FILEPATH)
+    recsys.csv.ensure_exist(recsys.csv.CSV_USERS_FILEPATH)
+
     for game in recsys.csv.load(recsys.csv.CSV_GAMES_FILEPATH):
         game["id"] = int(game["id"])
         game["rpid"] = int(game["rpid"])
