@@ -1,4 +1,5 @@
 import recsys.csv
+import pickle
 
 __games: dict[int, dict] = {}
 __users: dict[int, dict] = {}
@@ -27,6 +28,24 @@ def __load():
     __dataset = {"games": __games, "users": __users}
     
 __load()
+
+def __load_embeddings() -> dict:
+    from os.path import exists
+
+    if not exists("data/embeddings.pkl"):
+        with open("data/embeddings.pkl", "wb") as f:
+            pickle.dump({}, f)
+
+    with open("data/embeddings.pkl", "rb") as f:
+        embeddings = pickle.load(f)
+        return embeddings
+    
+    return {}
+
+def __save_embeddings():
+    with open("data/embeddings.pkl", "wb") as f:
+        embeddings = {k: v["__embed"] for k, v in __games.items()}
+        pickle.dump(embeddings, f)
 
 def __get(id: int, d: dict) -> dict:
     if id not in d:
