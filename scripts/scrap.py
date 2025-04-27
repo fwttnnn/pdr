@@ -19,7 +19,7 @@ def __roblox_api_get(url: str, cookies = None) -> dict:
     if "errors" in resp:
         time.sleep(.75)
         print(f"[ALERT!] Retrying.. {url}")
-        print("[INFO] ", resp)
+        print("[INFO!] ", resp)
         return __roblox_api_get(url)
     
     return resp
