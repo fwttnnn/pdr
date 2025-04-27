@@ -5,6 +5,7 @@ import torch
 import sentence_transformers.util
 from sentence_transformers import SentenceTransformer
 
+# all-MiniLM-L6-v2 | all-mpnet-base-v2
 __model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
 
 def __pre_compute_embeddings():
@@ -27,20 +28,3 @@ def similar(game_id: int, k: int = 10) -> list[str]:
     
     # TODO: we should use sorted list
     return sorted(similarities, key=lambda x: x[0], reverse=True)[:k]
-
-def predict(game_ids: list[int], k: int = 5) -> list[str]:
-    __pre_compute_embeddings()
-
-    game_ids = set(game_ids)
-    embeddings = [game["__embed"] for game in recsys.dataset.__games.values() if game["id"] in game_ids]
-
-    predictions: list[tuple] = []
-    for game in recsys.dataset.__games.values():
-        if game["id"] in game_ids:
-            continue
-
-        similarities = [sentence_transformers.util.cos_sim(embedding, game["__embed"]).item() for embedding in embeddings]
-        predictions.append((torch.mean(torch.tensor(similarities)), game["title"], game["id"]))
-
-    # TODO: we should use sorted list
-    return sorted(predictions, key=lambda x: x[0], reverse=True)[:k]
