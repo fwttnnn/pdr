@@ -15,7 +15,7 @@ def __pre_compute_embeddings():
         
         game["__embed"] = __model.encode(recsys.nlp.lemmatize(game), convert_to_tensor=True)
 
-def similar(game_id: int, k: int = 10) -> list[str]:
+def similar(game_id: int, k: int = 10) -> list[tuple]:
     __pre_compute_embeddings()
 
     similarities: list[tuple] = []
@@ -24,7 +24,7 @@ def similar(game_id: int, k: int = 10) -> list[str]:
             continue
 
         similarity = sentence_transformers.util.cos_sim(recsys.dataset.game_get(game_id)["__embed"], game["__embed"]).item()
-        similarities.append((similarity, game["title"]))
+        similarities.append((similarity, game["id"]))
     
     # TODO: we should use sorted list
     return sorted(similarities, key=lambda x: x[0], reverse=True)[:k]
