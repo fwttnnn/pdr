@@ -39,7 +39,7 @@ def user_get_fav_games(user_id: int, _cursor: str = "") -> list[int]:
 
 def user_get_hist_games(user_id: int, _cursor: str = "") -> list[int]:
     resp = __roblox_api_get(f"https://badges.roblox.com/v1/users/{user_id}/badges?limit=100&sortOrder=Desc&cursor={_cursor}")
-    games: list[int] = list(set([badge["awarder"]["id"] for badge in resp["data"]]))
+    games: list[int] = [badge["awarder"]["id"] for badge in resp["data"]]
 
     if resp["nextPageCursor"]:
         games.extend(user_get_hist_games(user_id, _cursor=resp["nextPageCursor"]))
@@ -71,32 +71,38 @@ def game_get_details(game_ids: list[int]) -> list[dict]:
 
     return games
 
-def csv_load_game_ids(path: str) -> set[int]:
+def csv_load_game_ids(path: str = recsys.csv.CSV_GAMES_FILEPATH) -> set[int]:
     return recsys.csv.load_nth_row(path, 0)
 
-def csv_load_root_game_ids(path: str) -> set[int]:
-    return recsys.csv.load_nth_row(path, 1)
+def csv_load_game_rpids(path: str = recsys.csv.CSV_GAMES_FILEPATH) -> dict[int, int]:
+    return {int(game["rpid"]): int(game["id"]) for game in recsys.csv.load(path)}
 
-def csv_load_user_ids(path: str) -> set[int]:
+def csv_load_user_ids(path: str = recsys.csv.CSV_USERS_FILEPATH) -> set[int]:
     return recsys.csv.load_nth_row(path, 0)
         
 if __name__ == "__main__":
-    OPT_SCRAP_FROM_USER_BADGES = True
-
     recsys.csv.ensure_exist(recsys.csv.CSV_USERS_FILEPATH)
     recsys.csv.ensure_exist(recsys.csv.CSV_GAMES_FILEPATH)
 
     uid = 1531539874
-    users = csv_load_user_ids(recsys.csv.CSV_USERS_FILEPATH)
-    games = csv_load_game_ids(recsys.csv.CSV_GAMES_FILEPATH)
+    users = csv_load_user_ids()
+    games = csv_load_game_ids()
+    rpids = csv_load_game_rpids()
 
     (csv_fd_users, csv_writer_users) = recsys.csv.insert_headers(recsys.csv.CSV_USERS_FILEPATH, ["id", "favorites", "history", "friends"])
     (csv_fd_games, csv_writer_games) = recsys.csv.insert_headers(recsys.csv.CSV_GAMES_FILEPATH, ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
 
     __user_fav_games = user_get_fav_games(uid)
     __user_hist_games = []
-    if OPT_SCRAP_FROM_USER_BADGES:
-        __user_hist_games = [game_convert_root_place_id(rpid) for rpid in user_get_hist_games(uid)] 
+
+    for rpid in user_get_hist_games(uid):
+        if rpid in rpids:
+            __user_hist_games.append(rpids[rpid])
+            continue
+
+        game_id = game_convert_root_place_id(rpid)
+        rpids[rpid] = game_id
+        __user_hist_games.append(game_id)
 
     __user_friends = user_get_friends(uid)
 
