@@ -57,8 +57,7 @@ def __test(user: dict, k=10):
     idcg = 1
     dcg = 0.0
 
-    predictions = recsys.model.similar(hist, k)
-    for idx, p in enumerate(predictions):
+    for idx, p in enumerate(recsys.model.similar(hist, k)):
         game = recsys.dataset.game_get(p[2])
         hit += int(game["id"] in future)
 
