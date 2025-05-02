@@ -63,7 +63,7 @@ def __random(d: dict) -> dict:
     import random
 
     ids = list(d.keys())
-    id = ids[random.randint(0, len(ids))]
+    id = ids[random.randint(0, len(ids) - 1)]
     return d[id]
 
 def game_get_random() -> dict:
