@@ -58,7 +58,7 @@ def __test(user: dict, k=10):
     dcg = 0.0
 
     for idx, p in enumerate(recsys.model.similar(hist, k)):
-        game = recsys.dataset.game_get(p[2])
+        game = recsys.dataset.game_get(p[1])
         hit += int(game["id"] in future)
 
         if game["id"] in future:

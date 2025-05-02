@@ -36,7 +36,7 @@ def similar(game_ids: list[int], k: int = 10) -> list[tuple]:
             continue
 
         similarities = [sentence_transformers.util.cos_sim(embedding, game["__embed"]).item() for embedding in embeddings]
-        predictions.append((torch.mean(torch.tensor(similarities)), game["title"], game["id"]))
+        predictions.append((torch.mean(torch.tensor(similarities)), game["id"]))
     
     # TODO: we should use sorted list
     return sorted(predictions, key=lambda x: x[0], reverse=True)[:k]
