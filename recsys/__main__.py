@@ -79,7 +79,7 @@ if __name__ == "__main__":
     
     if "--test" in sys.argv:
         for user in recsys.dataset.__users.values():
-            __test(user, k=20)
+            __test(user, k=10)
             print()
         sys.exit(0)
 
