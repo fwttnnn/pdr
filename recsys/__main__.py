@@ -49,7 +49,7 @@ def __test(user: dict, k=10):
         start = random.randint(0, max(0, (len(lst) - n) - 1))
         return lst[start:start+n]
 
-    hist = sample(user["favorites"] + user["history"], n=50+k)
+    hist = sample(user["favorites"] + user["history"], n=k+k)
     future = hist[k:] # this is the list of what the predictions should be tested on
     hist = hist[:k]
 
@@ -66,7 +66,8 @@ def __test(user: dict, k=10):
 
         print(f"{p[1]} \t ::= {game["id"] in future} @@@ https://roblox.com/games/{game["rpid"]}")
     
-    print(f"Hit@{k}: {hit}, NDCG@{k}: {dcg / idcg}")
+    precision = hit / k
+    return hit, dcg / idcg, precision
 
 if __name__ == "__main__":
     import recsys.dataset
@@ -78,9 +79,17 @@ if __name__ == "__main__":
         sys.exit(0)
     
     if "--test" in sys.argv:
+        k = 10
+        total = 0.0
+
         for user in recsys.dataset.__users.values():
-            __test(user, k=10)
+            hit, ndcg, precision = __test(user, k=k)
+            print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg}, Precision@{k}: {precision}")
             print()
+            total += precision
+
+        avg = total / len(recsys.dataset.__users.values())
+        print(f"precision avg: {avg}")
         sys.exit(0)
 
     game = recsys.dataset.game_get_random()
