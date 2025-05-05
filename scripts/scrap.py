@@ -106,7 +106,15 @@ if __name__ == "__main__":
 
     __user_friends = user_get_friends(uid)
 
-    for game in game_get_details([id for id in __user_fav_games + __user_hist_games if id not in games or games.add(id)]):
+    game_ids = []
+    for game_id in [id for id in __user_fav_games + __user_hist_games]:
+        if game_id in games:
+            continue
+
+        games.add(game_id)
+        game_ids.append(game_id)
+
+    for game in game_get_details(game_ids):
         csv_writer_games.writerow(game)
 
     # TODO: this does not check for updated user games/friends
