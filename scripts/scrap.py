@@ -5,13 +5,13 @@ Roblox game scraper based on user's fav list and badges.
 """
 
 import sys, pathlib
-sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent))
+sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent.joinpath("lib")))
 
 import time
 import re
 import requests
 import emoji
-import recsys.csv
+import dataset
 
 def __roblox_api_get(url: str, cookies = None) -> dict:
     resp = requests.get(url, cookies=cookies).json()
@@ -71,26 +71,26 @@ def game_get_details(game_ids: list[int]) -> list[dict]:
 
     return games
 
-def csv_load_game_ids(path: str = recsys.csv.CSV_GAMES_FILEPATH) -> set[int]:
-    return recsys.csv.load_nth_row(path, 0)
+def csv_load_game_ids(path: str = dataset.CSV_GAMES_FILEPATH) -> set[int]:
+    return dataset.load_nth_row(path, 0)
 
-def csv_load_game_rpids(path: str = recsys.csv.CSV_GAMES_FILEPATH) -> dict[int, int]:
-    return {int(game["rpid"]): int(game["id"]) for game in recsys.csv.load(path)}
+def csv_load_game_rpids(path: str = dataset.CSV_GAMES_FILEPATH) -> dict[int, int]:
+    return {int(game["rpid"]): int(game["id"]) for game in dataset.load(path)}
 
-def csv_load_user_ids(path: str = recsys.csv.CSV_USERS_FILEPATH) -> set[int]:
-    return recsys.csv.load_nth_row(path, 0)
+def csv_load_user_ids(path: str = dataset.CSV_USERS_FILEPATH) -> set[int]:
+    return dataset.load_nth_row(path, 0)
         
 if __name__ == "__main__":
-    recsys.csv.ensure_exist(recsys.csv.CSV_USERS_FILEPATH)
-    recsys.csv.ensure_exist(recsys.csv.CSV_GAMES_FILEPATH)
+    dataset.ensure_exist(dataset.CSV_USERS_FILEPATH)
+    dataset.ensure_exist(dataset.CSV_GAMES_FILEPATH)
 
     uid = 1531539874
     users = csv_load_user_ids()
     games = csv_load_game_ids()
     rpids = csv_load_game_rpids()
 
-    (csv_fd_users, csv_writer_users) = recsys.csv.insert_headers(recsys.csv.CSV_USERS_FILEPATH, ["id", "favorites", "history", "friends"])
-    (csv_fd_games, csv_writer_games) = recsys.csv.insert_headers(recsys.csv.CSV_GAMES_FILEPATH, ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
+    (csv_fd_users, csv_writer_users) = dataset.insert_headers(dataset.CSV_USERS_FILEPATH, ["id", "favorites", "history", "friends"])
+    (csv_fd_games, csv_writer_games) = dataset.insert_headers(dataset.CSV_GAMES_FILEPATH, ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
 
     __user_fav_games = user_get_fav_games(uid)
     __user_hist_games = []
