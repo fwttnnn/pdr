@@ -42,7 +42,7 @@ Synchronize
 
 To get the latest Workspace (map):
 
-    lune run scripts/sync.luau
+    lune run tools/sync.luau
 
 Spawn a rojo server:
 
