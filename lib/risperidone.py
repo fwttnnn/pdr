@@ -45,29 +45,51 @@ def __test(user: dict, k=10):
     import math
     import random
 
-    def sample(lst: list, n: int) -> list:
-        start = random.randint(0, max(0, (len(lst) - n) - 1))
-        return lst[start:start+n]
+    hist = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
+    hist = [dataset.__games[id] for id in hist]
+    
+    group: dict[str, list] = {}
+    for g in hist:
+        x = g["genres"].lower().split("|")[1]
+        if x not in group:
+            group[x] = []
 
-    hist = sample(user["favorites"] + user["history"], n=k+k)
-    future = hist[k:] # this is the list of what the predictions should be tested on
-    hist = hist[:k]
+        group[x].append((g["id"], g["title"]))
 
-    hit = 0
-    idcg = 1
-    dcg = 0.0
+    genre = random.choice(list(group.keys()))
+    games = group[genre]
 
-    for idx, p in enumerate(model.similar(hist, k)):
+    hist = [g[0] for g in games]
+    CHANGE_THIS_LATER = 3
+    future = hist[CHANGE_THIS_LATER:]
+    hist = hist[:CHANGE_THIS_LATER]
+
+    def metrics(hist: list, predictions: list):
+        relevances = [int(p in hist) for p in predictions]
+        ideal_relevances = sorted(relevances, reverse=True)
+        k = len(relevances)
+
+        hit = 0
+        dcg = 0.0
+        idcg = 0.0
+
+        for i in range(k):
+            logd = math.log2(i + 2)
+            dcg += relevances[i] / logd
+            idcg += ideal_relevances[i] / logd
+
+            hit += relevances[i]
+
+        ndcg = (dcg / idcg if idcg > 0 else 0.0)
+        precision = hit / k
+        return hit, ndcg, precision
+
+    predictions = model.similar(hist, k)
+    for p in predictions:
         game = dataset.game_get(p[1])
-        hit += int(game["id"] in future)
-
-        if game["id"] in future:
-            dcg = max(dcg, 1 / math.log2(idx + 2))
-
         print(f"{p[1]} \t ::= {game["id"] in future} @@@ https://roblox.com/games/{game["rpid"]}")
     
-    precision = hit / k
-    return hit, dcg / idcg, precision
+    return metrics(future, [p[1] for p in predictions])
 
 if __name__ == "__main__":
     import dataset
