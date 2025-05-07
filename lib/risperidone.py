@@ -50,7 +50,7 @@ def __test(user: dict, k=10):
     
     group: dict[str, list] = {}
     for g in hist:
-        x = g["genres"].lower().split("|")[1]
+        x = g["genres"][1]
         if x not in group:
             group[x] = []
 

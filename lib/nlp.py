@@ -5,7 +5,7 @@ __nlp: spacy.Language = spacy.load("en_core_web_sm")
 
 def lemmatize(game: dict[str, str]) -> str:
     desc = re.sub(r"\\n", r"\n", game["description"].lower())
-    doc = __nlp(f"{game["title"].lower()} {" ".join(game["genres"].lower().split("|"))} {desc}")
+    doc = __nlp(f"{game["title"].lower()} {" ".join(game["genres"]).lower()} {desc}")
 
     tokens = [token.lemma_ for token in doc
             if token.pos_ in {"NOUN", "PROPN", "ADJ", "VERB"} 

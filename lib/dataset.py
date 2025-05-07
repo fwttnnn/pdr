@@ -53,6 +53,7 @@ def __load():
         game["rpid"] = int(game["rpid"])
         game["visits"] = int(game["visits"])
         game["favorite"] = int(game["favorite"])
+        game["genres"] = game["genres"].split("|")
         __games[game["id"]] = game
 
     for user in load(CSV_USERS_FILEPATH):
