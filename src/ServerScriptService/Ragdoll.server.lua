@@ -17,13 +17,6 @@ game:GetService("Players").PlayerAdded:Connect(function(player: Player)
 end)
 
 
--- TODO: i'm lazy
-local Light = require(game:GetService("ReplicatedStorage").Light)
-for i, v in pairs(workspace:GetDescendants()) do
-    if v:IsA("Part") and v.Name == "Light" then
-        Light.init(v)
-        break
-    end
-end
-
-Light.flickr()
+-- local Light = require(game:GetService("ReplicatedStorage").Light)
+-- Light.init(workspace:WaitForChild("Invisible"):WaitForChild("Light"))
+-- Light.flickr()

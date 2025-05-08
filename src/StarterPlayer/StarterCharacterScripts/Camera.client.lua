@@ -13,4 +13,5 @@ character.Humanoid.Touched:Connect(function(hit, _limb)
     if hit.Name == "Hit@Lobby" then cameraLookAt(camFolder.Lobby.Cam.Position, camFolder.Lobby.Focus.Position) end
     if hit.Name == "Hit@Left"  then cameraLookAt(camFolder.Left.Cam.Position, camFolder.Left.Focus.Position) end
     if hit.Name == "Hit@Right" then cameraLookAt(camFolder.Right.Cam.Position, camFolder.Right.Focus.Position) end
+    if hit.Name == "Hit@Middle" then cameraLookAt(camFolder.Middle.Cam.Position, camFolder.Middle.Focus.Position) end
 end)
