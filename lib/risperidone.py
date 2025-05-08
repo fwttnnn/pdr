@@ -43,26 +43,22 @@ def __run_server():
 
 def __test(user: dict, k=10):
     import math
-    import random
 
-    hist = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
-    hist = [dataset.__games[id] for id in hist]
-    
-    group: dict[str, list] = {}
-    for g in hist:
-        x = g["genres"][1]
-        if x not in group:
-            group[x] = []
+    hist__ = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
+    hist__ = [dataset.__games[id] for id in hist__ if id in dataset.__games]
 
-        group[x].append((g["id"], g["title"]))
+    def group(games: list[dict]) -> dict[str, list]:
+        groups: dict[str, list] = {}
 
-    genre = random.choice(list(group.keys()))
-    games = group[genre]
+        for game in games:
+            genre = game["genres"][1]
 
-    hist = [g[0] for g in games]
-    CHANGE_THIS_LATER = 3
-    future = hist[CHANGE_THIS_LATER:]
-    hist = hist[:CHANGE_THIS_LATER]
+            if genre not in groups:
+                groups[genre] = []
+
+            groups[genre].append(game["id"])
+
+        return groups
 
     def metrics(hist: list, predictions: list):
         relevances = [int(p in hist) for p in predictions]
@@ -84,12 +80,40 @@ def __test(user: dict, k=10):
         precision = hit / k
         return hit, ndcg, precision
 
-    predictions = model.similar(hist, k)
-    for p in predictions:
-        game = dataset.game_get(p[1])
-        print(f"{p[1]} \t ::= {game["id"] in future} @@@ https://roblox.com/games/{game["rpid"]}")
-    
-    return metrics(future, [p[1] for p in predictions])
+    nmetrics      = 0
+    avg_hit       = 0
+    avg_ndcg      = 0
+    avg_precision = 0
+
+    for genre, hist in group(hist__).items():
+        hist = hist[:3]
+        future = [game["id"] for game in hist__]
+        
+        for id in hist:
+            game = dataset.game_get(id)
+            print(f"{game["id"]} \t ::= https://roblox.com/games/{game["rpid"]}")
+
+        predictions = model.similar(hist, k)
+        for p in predictions:
+            game = dataset.game_get(p[1])
+            print(f"{p[1]} \t ::= {game["id"] in future} @@@ https://roblox.com/games/{game["rpid"]}")
+        
+        hit, ndcg, precision = metrics(future, [p[1] for p in predictions])
+        print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg}, Precision@{k}: {precision}")
+        print(genre)
+        print()
+
+        nmetrics += 1
+        avg_hit += hit
+        avg_ndcg += ndcg
+        avg_precision += precision
+
+    avg_hit /= nmetrics
+    avg_ndcg /= nmetrics
+    avg_precision /= nmetrics
+    print(f"Average Hit@{k}: {avg_hit}, Average NDCG@{k}: {avg_ndcg}, Average Precision@{k}: {avg_precision}")
+
+    return avg_hit, avg_ndcg, avg_precision
 
 if __name__ == "__main__":
     import dataset
@@ -101,17 +125,11 @@ if __name__ == "__main__":
         sys.exit(0)
     
     if "--test" in sys.argv:
-        k = 10
-        total = 0.0
-
         for user in dataset.__users.values():
-            hit, ndcg, precision = __test(user, k=k)
-            print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg}, Precision@{k}: {precision}")
+            print(f"testing user: {user["id"]}")
+            __test(user, k=10)
             print()
-            total += precision
 
-        avg = total / len(dataset.__users.values())
-        print(f"precision avg: {avg}")
         sys.exit(0)
 
     game = dataset.game_get_random()
