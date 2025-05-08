@@ -79,12 +79,8 @@ def csv_load_game_rpids(path: str = dataset.CSV_GAMES_FILEPATH) -> dict[int, int
 
 def csv_load_user_ids(path: str = dataset.CSV_USERS_FILEPATH) -> set[int]:
     return dataset.load_nth_row(path, 0)
-        
-if __name__ == "__main__":
-    dataset.ensure_exist(dataset.CSV_USERS_FILEPATH)
-    dataset.ensure_exist(dataset.CSV_GAMES_FILEPATH)
 
-    uid = 1531539874
+def scrap(uid: int):
     users = csv_load_user_ids()
     games = csv_load_game_ids()
     rpids = csv_load_game_rpids()
@@ -126,3 +122,10 @@ if __name__ == "__main__":
 
     csv_fd_games.close()
     csv_fd_users.close()
+        
+if __name__ == "__main__":
+    dataset.ensure_exist(dataset.CSV_USERS_FILEPATH)
+    dataset.ensure_exist(dataset.CSV_GAMES_FILEPATH)
+
+    for uid in []:
+        scrap(uid)
