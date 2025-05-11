@@ -58,74 +58,81 @@ def game_get_details(game_ids: list[int]) -> list[dict]:
     for chunk in chunks:
         resp = __roblox_api_get(f"https://games.roblox.com/v1/games?universeIds={",".join(map(str, chunk))}")
         games.extend([{
-            "id":            game["id"],
-            "rpid":          game["rootPlaceId"],
-            "title":         emoji.replace_emoji(game["name"], r"").strip(),
-            "description":   emoji.replace_emoji(re.sub(r"\r?\n", r"\\n", game["description"] or ""), r"").strip(),
-            "genres":        "|".join([game["genre"], game["genre_l1"], game["genre_l2"]]),
-            "visits":        game["visits"],
-            "favorite":      game["favoritedCount"],
-            "created":       game["created"],
-            "updated":       game["updated"],
+            "id":           game["id"],
+            "rpid":         game["rootPlaceId"],
+            "title":        emoji.replace_emoji(game["name"], r"").strip(),
+            "description":  emoji.replace_emoji(re.sub(r"\r?\n", r"\\n", game["description"] or ""), r"").strip(),
+            "genres":       [game["genre"], game["genre_l1"], game["genre_l2"]],
+            "visits":       game["visits"],
+            "favorite":     game["favoritedCount"],
         } for game in resp["data"]])
 
     return games
 
-def csv_load_game_ids(path: str = dataset.CSV_GAMES_FILEPATH) -> set[int]:
-    return dataset.load_nth_row(path, 0)
-
-def csv_load_game_rpids(path: str = dataset.CSV_GAMES_FILEPATH) -> dict[int, int]:
-    return {int(game["rpid"]): int(game["id"]) for game in dataset.load(path)}
-
-def csv_load_user_ids(path: str = dataset.CSV_USERS_FILEPATH) -> set[int]:
-    return dataset.load_nth_row(path, 0)
+dataset.__load()
+users: dict[int, dict] = {}
+games: dict[int, dict] = {}
 
 def scrap(uid: int):
-    users = csv_load_user_ids()
-    games = csv_load_game_ids()
-    rpids = csv_load_game_rpids()
+    global users, games
+    rpids: dict[int, int] = {game["rpid"]: game["id"] for game in dataset.games.values()}
 
-    (csv_fd_users, csv_writer_users) = dataset.insert_headers(dataset.CSV_USERS_FILEPATH, ["id", "favorites", "history", "friends"])
-    (csv_fd_games, csv_writer_games) = dataset.insert_headers(dataset.CSV_GAMES_FILEPATH, ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
+    def scrap_user_information(uid):
+        if uid in dataset.users:
+            users[uid] = dataset.users[uid]
+            return
 
-    __user_fav_games = user_get_fav_games(uid)
-    __user_hist_games = []
+        users[uid] = {}
+        users[uid]["friends"] = user_get_friends(uid)
+        users[uid]["favorites"] = user_get_fav_games(uid)
+        users[uid]["history"] = []
 
-    for rpid in user_get_hist_games(uid):
-        if rpid in rpids:
-            __user_hist_games.append(rpids[rpid])
+        for rpid in user_get_hist_games(uid):
+            if rpid in rpids:
+                users[uid]["history"].append(rpids[rpid])
+                continue
+
+            game_id = game_convert_root_place_id(rpid)
+            rpids[rpid] = game_id
+            users[uid]["history"].append(game_id)
+
+    scrap_user_information()
+
+    game_ids_to_be_scrapped = []
+    for game_id in [id for id in users[uid]["favorites"] + list(set(users[uid]["history"]))]:
+        if game_id in dataset.games:
+            games[game_id] = dataset.games[game_id]
             continue
-
-        game_id = game_convert_root_place_id(rpid)
-        rpids[rpid] = game_id
-        __user_hist_games.append(game_id)
-
-    __user_friends = user_get_friends(uid)
-
-    game_ids = []
-    for game_id in [id for id in __user_fav_games + __user_hist_games]:
-        if game_id in games:
-            continue
-
-        games.add(game_id)
-        game_ids.append(game_id)
-
-    for game in game_get_details(game_ids):
-        csv_writer_games.writerow(game)
-
-    # TODO: this does not check for updated user games/friends
-    if not (uid in users):
-        csv_writer_users.writerow({"id":        uid, 
-                                   "favorites": "|".join(map(str, __user_fav_games)), 
-                                   "history":   "|".join(map(str, __user_hist_games)),
-                                   "friends":   "|".join(map(str, __user_friends))})
-
-    csv_fd_games.close()
-    csv_fd_users.close()
         
+        game_ids_to_be_scrapped.append(game_id)
+
+    for game in game_get_details(game_ids_to_be_scrapped):
+        games[game["id"]] = game
+
 if __name__ == "__main__":
+    dataset.CSV_USERS_FILEPATH = "data/users--migrated.csv"
+    dataset.CSV_GAMES_FILEPATH = "data/games--migrated.csv"
+
     dataset.ensure_exist(dataset.CSV_USERS_FILEPATH)
     dataset.ensure_exist(dataset.CSV_GAMES_FILEPATH)
-
+        
     for uid in []:
+        print(uid)
         scrap(uid)
+
+    dataset.dump(dataset.CSV_USERS_FILEPATH,
+                 [{"id":        str(u["id"]), 
+                   "favorites": "|".join(map(str, u["favorites"])), 
+                   "history":   "|".join(map(str, u["history"])),
+                   "friends":   "|".join(map(str, u["friends"]))} for u in users.values()],
+                 ["id", "favorites", "history", "friends"])
+
+    dataset.dump(dataset.CSV_GAMES_FILEPATH,
+                 [{"id":           str(g["id"]),
+                   "rpid":         str(g["rpid"]),
+                   "title":        g["title"],
+                   "description":  g["description"],
+                   "genres":       "|".join(g["genres"]),
+                   "visits":       str(g["visits"]),
+                   "favorite":     str(g["favorite"])} for g in games.values()],
+                 ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
