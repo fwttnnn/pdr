@@ -6,6 +6,4 @@
 *.rbxlx.lock
 *.rbxl.lock
 
-data/*.csv
-data/*.pkl
-rcookie.json
+data/**/*
