@@ -15,13 +15,13 @@ import requests
 import emoji
 import dataset
 
-def __roblox_api_get(url: str, cookies = None) -> dict:
-    print(url, file=sys.stderr)
+def __roblox_api_get(url: str, cookies = None, retrying = False) -> dict:
+    print(url + (" retrying.." if retrying else ""), file=sys.stderr)
     resp = requests.get(url, cookies=cookies).json()
 
     if "errors" in resp:
         time.sleep(random.uniform(0.8, 1.5)) # 0.8 - 1.5 secs sleep
-        return __roblox_api_get(url)
+        return __roblox_api_get(url, retrying=True)
     
     return resp
 
@@ -71,24 +71,21 @@ def game_get_details(game_ids: list[int]) -> list[dict]:
     return games
 
 def scrap(uid: int):
-    def scrap_user_information(uid: int):
-        dataset.users[uid] = {}
-        dataset.users[uid]["id"] = uid
-        dataset.users[uid]["friends"] = user_get_friends(uid)
-        dataset.users[uid]["favorites"] = user_get_fav_games(uid)
-        dataset.users[uid]["history"] = []
+    dataset.users[uid] = {}
+    dataset.users[uid]["id"] = uid
+    dataset.users[uid]["friends"] = user_get_friends(uid)
+    dataset.users[uid]["favorites"] = user_get_fav_games(uid)
+    dataset.users[uid]["history"] = []
 
-        rpids: dict[int, int] = {game["rpid"]: game["id"] for game in dataset.games.values()}
-        for rpid in user_get_hist_games(uid):
-            if rpid in rpids:
-                dataset.users[uid]["history"].append(rpids[rpid])
-                continue
+    rpids: dict[int, int] = {game["rpid"]: game["id"] for game in dataset.games.values()}
+    for rpid in user_get_hist_games(uid):
+        if rpid in rpids:
+            dataset.users[uid]["history"].append(rpids[rpid])
+            continue
 
-            game_id = game_convert_root_place_id(rpid)
-            rpids[rpid] = game_id
-            dataset.users[uid]["history"].append(game_id)
-
-    scrap_user_information(uid)
+        game_id = game_convert_root_place_id(rpid)
+        rpids[rpid] = game_id
+        dataset.users[uid]["history"].append(game_id)
 
     game_ids_to_be_scrapped = []
     for game_id in [id for id in dataset.users[uid]["favorites"] + list(set(dataset.users[uid]["history"]))]:
