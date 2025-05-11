@@ -121,18 +121,18 @@ if __name__ == "__main__":
         scrap(uid)
 
     dataset.dump(dataset.CSV_USERS_FILEPATH,
-                 [{"id":        str(u["id"]), 
+                 [{"id":        u["id"],
                    "favorites": "|".join(map(str, u["favorites"])), 
                    "history":   "|".join(map(str, u["history"])),
                    "friends":   "|".join(map(str, u["friends"]))} for u in users.values()],
                  ["id", "favorites", "history", "friends"])
 
     dataset.dump(dataset.CSV_GAMES_FILEPATH,
-                 [{"id":           str(g["id"]),
-                   "rpid":         str(g["rpid"]),
+                 [{"id":           g["id"],
+                   "rpid":         g["rpid"],
                    "title":        g["title"],
                    "description":  g["description"],
                    "genres":       "|".join(g["genres"]),
-                   "visits":       str(g["visits"]),
-                   "favorite":     str(g["favorite"])} for g in games.values()],
+                   "visits":       g["visits"],
+                   "favorite":     g["favorite"]} for g in games.values()],
                  ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
