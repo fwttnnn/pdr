@@ -104,7 +104,7 @@ def __test(user: dict, k=10):
         print(f"{pred} \t ::= {game["id"] in future} @@@ https://roblox.com/games/{game["rpid"]}")
     
     hit, ndcg, precision = metrics(future, predictions)
-    print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg}, Precision@{k}: {precision}")
+    print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg:.2f}, Precision@{k}: {precision:.2f}")
     print(most_liked_genres)
     
     return hit, ndcg, precision
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         avg_hit       /= users_len
         avg_ndcg      /= users_len
         avg_precision /= users_len
-        print(f"Average Hit@{k}: {avg_hit}, Average NDCG@{k}: {avg_ndcg}, Average Precision@{k}: {avg_precision}")
+        print(f"Average Hit@{k}: {avg_hit:.2f}, Average NDCG@{k}: {avg_ndcg:.2f}, Average Precision@{k}: {avg_precision:.2f}")
         sys.exit(0)
 
     game = dataset.__random(dataset.games)
