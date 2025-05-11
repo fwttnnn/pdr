@@ -30,7 +30,7 @@ def __run_server():
         if not dataset.game_get(id):
             return starlette.responses.JSONResponse({ "error": "Specified game does not exist" })
 
-        games = [dataset.game_get(rec[1]) for rec in model.similar([id], k=n)]
+        games = [dataset.game_get(pred) for pred in model.similar([id], k=n)]
         games = list(map(lambda game: {k: v for k, v in game.items() if k not in {"__embed"}}, games))
 
         return starlette.responses.JSONResponse({
@@ -79,63 +79,72 @@ def __test(user: dict, k=10):
         ndcg = (dcg / idcg if idcg > 0 else 0.0)
         precision = hit / k
         return hit, ndcg, precision
+    
+    from collections import Counter
+    most_liked_genres = set()
+    ngames = 0
+    
+    for (genre, count) in Counter([game["genres"][1] for game in hist__]).most_common():
+        most_liked_genres.add(genre)
+        ngames += count
 
-    nmetrics      = 0
-    avg_hit       = 0
-    avg_ndcg      = 0
-    avg_precision = 0
+        if ngames >= 3:
+            break
 
-    for genre, hist in group(hist__).items():
-        hist = hist[:3]
-        future = [game["id"] for game in hist__]
-        
-        for id in hist:
-            game = dataset.game_get(id)
-            print(f"{game["id"]} \t ::= https://roblox.com/games/{game["rpid"]}")
+    hist = [game["id"] for game in hist__ if game["genres"][1] in most_liked_genres][:3]
+    future = [game["id"] for game in hist__]
 
-        predictions = model.similar(hist, k)
-        for p in predictions:
-            game = dataset.game_get(p[1])
-            print(f"{p[1]} \t ::= {game["id"] in future} @@@ https://roblox.com/games/{game["rpid"]}")
-        
-        hit, ndcg, precision = metrics(future, [p[1] for p in predictions])
-        print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg}, Precision@{k}: {precision}")
-        print(genre)
-        print()
+    for id in hist:
+        game = dataset.game_get(id)
+        print(f"{game["id"]} \t ::= https://roblox.com/games/{game["rpid"]}")
 
-        nmetrics += 1
-        avg_hit += hit
-        avg_ndcg += ndcg
-        avg_precision += precision
-
-    avg_hit /= nmetrics
-    avg_ndcg /= nmetrics
-    avg_precision /= nmetrics
-    print(f"Average Hit@{k}: {avg_hit}, Average NDCG@{k}: {avg_ndcg}, Average Precision@{k}: {avg_precision}")
-
-    return avg_hit, avg_ndcg, avg_precision
+    predictions = model.similar(hist, k)
+    for pred in predictions:
+        game = dataset.game_get(pred)
+        print(f"{pred} \t ::= {game["id"] in future} @@@ https://roblox.com/games/{game["rpid"]}")
+    
+    hit, ndcg, precision = metrics(future, predictions)
+    print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg}, Precision@{k}: {precision}")
+    print(most_liked_genres)
+    
+    return hit, ndcg, precision
 
 if __name__ == "__main__":
     import dataset
     import model
     import sys
 
+    if "--process" in sys.argv:
+        dataset.__process_games()
+        sys.exit(0)
+
     if "--serve" in sys.argv:
         __run_server()
         sys.exit(0)
     
     if "--test" in sys.argv:
+        k             = 10
+        avg_hit       = 0
+        avg_ndcg      = 0
+        avg_precision = 0
+
         for user in dataset.__users.values():
             print(f"testing user: {user["id"]}")
-            __test(user, k=10)
+            hit, ndcg, precision = __test(user, k)
+            avg_hit += hit
+            avg_ndcg += ndcg
+            avg_precision += precision
             print()
 
+        users_len = len(dataset.__users)
+        avg_hit       /= users_len
+        avg_ndcg      /= users_len
+        avg_precision /= users_len
+        print(f"Average Hit@{k}: {avg_hit}, Average NDCG@{k}: {avg_ndcg}, Average Precision@{k}: {avg_precision}")
         sys.exit(0)
 
     game = dataset.game_get_random()
     print(f"games similar to '{game["title"]}' (https://roblox.com/games/{game["rpid"]}):")
-    for __game in model.similar([game["id"]], k=10):
-        score, id = __game
-        __game = dataset.game_get(id)
-
-        print(f"{score} '{__game["title"]}' (https://roblox.com/games/{__game["rpid"]})")
+    for pred in model.similar([game["id"]], k=10):
+        __game = dataset.game_get(pred)
+        print(f"'{__game["title"]}' (https://roblox.com/games/{__game["rpid"]})")

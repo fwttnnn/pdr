@@ -25,6 +25,15 @@ def load_nth_row(path: str, nth: int) -> set[int]:
 
     return set()
 
+def dump(path: str, objects: list[dict], headers: list[str]):
+    with open(path, mode="w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=headers)
+
+        if os.stat(path).st_size == 0:
+            w.writeheader()
+        
+        w.writerows(objects)
+
 def insert_headers(path: str, headers: list[str]) -> tuple[io.TextIOWrapper, csv.DictWriter]:
     f = open(path, mode="a", newline="", encoding="utf-8")
     w = csv.DictWriter(f, fieldnames=headers)
@@ -82,6 +91,43 @@ def __save_embeddings():
     with open("data/embeddings.pkl", "wb") as f:
         embeddings = {k: v["__embed"] for k, v in __games.items()}
         pickle.dump(embeddings, f)
+
+def __process_games():
+    import model
+    import time
+    from collections import Counter
+
+    batch = -1
+
+    for id, game in __games.items():
+        if batch == 0:
+            break
+
+        if game["title"] == "[ Content Deleted ]" or game["genres"][1] != "":
+            continue
+
+        start = time.time()
+
+        genres = Counter([__games[pred]["genres"][1] for pred in model.similar([id], k=50)]).most_common()
+        game["genres"][1] = next(filter(lambda genre: genre[0] != "", genres), ("", ))[0]
+
+        end = time.time()
+        print(f"{id} Elapsed time: {end - start:.4f} seconds")
+
+        batch -= 1
+
+    dump(CSV_GAMES_FILEPATH, [{
+            "id":            game["id"],
+            "rpid":          game["rpid"],
+            "title":         game["title"],
+            "description":   game["description"],
+            "genres":        "|".join(game["genres"]),
+            "visits":        game["visits"],
+            "favorite":      game["favorite"],
+            "created":       game["created"],
+            "updated":       game["updated"],
+        } for game in __games.values()], 
+        ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
 
 def __get(id: int, d: dict) -> dict:
     if id not in d:
