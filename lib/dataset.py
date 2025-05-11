@@ -6,6 +6,9 @@ import pickle
 CSV_GAMES_FILEPATH = "data/games.csv"
 CSV_USERS_FILEPATH = "data/users.csv"
 
+games: dict[int, dict] = {}
+users: dict[int, dict] = {}
+
 def load(path: str) -> list[dict[str, str]]:
     with open(path, mode="r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -43,16 +46,12 @@ def insert_headers(path: str, headers: list[str]) -> tuple[io.TextIOWrapper, csv
 
     return f, w
 
-def ensure_exist(path: str) -> None:
+def ensure_exist(path: str):
     if not os.path.exists(path):
         open(path, "w").close()
 
-__games: dict[int, dict] = {}
-__users: dict[int, dict] = {}
-__dataset: dict[str, dict] = {}
-
 def __load():
-    global __games, __users, __dataset
+    global games, users
 
     ensure_exist(CSV_GAMES_FILEPATH)
     ensure_exist(CSV_USERS_FILEPATH)
@@ -63,16 +62,14 @@ def __load():
         game["visits"] = int(game["visits"])
         game["favorite"] = int(game["favorite"])
         game["genres"] = game["genres"].split("|")
-        __games[game["id"]] = game
+        games[game["id"]] = game
 
     for user in load(CSV_USERS_FILEPATH):
         user["id"] = int(user["id"])
         user["favorites"] = list(map(int, user["favorites"].split("|"))) if user["favorites"] != "" else []
         user["history"] = list(map(int, user["history"].split("|"))) if user["history"] != "" else []
         user["friends"] = list(map(int, user["friends"].split("|"))) if user["friends"] != "" else []
-        __users[user["id"]] = user
-    
-    __dataset = {"games": __games, "users": __users}
+        users[user["id"]] = user
 
 def __load_embeddings() -> dict:
     from os.path import exists
@@ -85,11 +82,9 @@ def __load_embeddings() -> dict:
         embeddings = pickle.load(f)
         return embeddings
     
-    return {}
-
 def __save_embeddings():
     with open("data/embeddings.pkl", "wb") as f:
-        embeddings = {k: v["__embed"] for k, v in __games.items()}
+        embeddings = {k: v["__embed"] for k, v in games.items()}
         pickle.dump(embeddings, f)
 
 def __process_games():
@@ -99,7 +94,7 @@ def __process_games():
 
     batch = -1
 
-    for id, game in __games.items():
+    for id, game in games.items():
         if batch == 0:
             break
 
@@ -108,7 +103,7 @@ def __process_games():
 
         start = time.time()
 
-        genres = Counter([__games[pred]["genres"][1] for pred in model.similar([id], k=50)]).most_common()
+        genres = Counter([games[pred]["genres"][1] for pred in model.similar([id], k=50)]).most_common()
         game["genres"][1] = next(filter(lambda genre: genre[0] != "", genres), ("", ))[0]
 
         end = time.time()
@@ -126,20 +121,8 @@ def __process_games():
             "favorite":      game["favorite"],
             "created":       game["created"],
             "updated":       game["updated"],
-        } for game in __games.values()], 
+        } for game in games.values()], 
         ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
-
-def __get(id: int, d: dict) -> dict:
-    if id not in d:
-        return None
-
-    return d[id]
-
-def game_get(id: int) -> dict:
-    return __get(id, __games)
-
-def user_get(id: int) -> dict:
-    return __get(id, __users)
 
 def __random(d: dict) -> dict:
     import random
@@ -147,10 +130,3 @@ def __random(d: dict) -> dict:
     ids = list(d.keys())
     id = ids[random.randint(0, len(ids) - 1)]
     return d[id]
-
-def game_get_random() -> dict:
-    return __random(__games)
-
-def user_get_random() -> dict:
-    return __random(__users)
-

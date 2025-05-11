@@ -27,10 +27,10 @@ def __run_server():
         except:
             return starlette.responses.JSONResponse({ "error": "Specified n should be an integer" })
 
-        if not dataset.game_get(id):
+        if not dataset.games[id]:
             return starlette.responses.JSONResponse({ "error": "Specified game does not exist" })
 
-        games = [dataset.game_get(pred) for pred in model.similar([id], k=n)]
+        games = [dataset.games[pred] for pred in model.similar([id], k=n)]
         games = list(map(lambda game: {k: v for k, v in game.items() if k not in {"__embed"}}, games))
 
         return starlette.responses.JSONResponse({
@@ -45,7 +45,7 @@ def __test(user: dict, k=10):
     import math
 
     hist__ = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
-    hist__ = [dataset.__games[id] for id in hist__ if id in dataset.__games]
+    hist__ = [dataset.games[id] for id in hist__ if id in dataset.games]
 
     def group(games: list[dict]) -> dict[str, list]:
         groups: dict[str, list] = {}
@@ -95,12 +95,12 @@ def __test(user: dict, k=10):
     future = [game["id"] for game in hist__]
 
     for id in hist:
-        game = dataset.game_get(id)
+        game = dataset.games[id]
         print(f"{game["id"]} \t ::= https://roblox.com/games/{game["rpid"]}")
 
     predictions = model.similar(hist, k)
     for pred in predictions:
-        game = dataset.game_get(pred)
+        game = dataset.games[pred]
         print(f"{pred} \t ::= {game["id"] in future} @@@ https://roblox.com/games/{game["rpid"]}")
     
     hit, ndcg, precision = metrics(future, predictions)
@@ -143,8 +143,8 @@ if __name__ == "__main__":
         print(f"Average Hit@{k}: {avg_hit}, Average NDCG@{k}: {avg_ndcg}, Average Precision@{k}: {avg_precision}")
         sys.exit(0)
 
-    game = dataset.game_get_random()
+    game = dataset.__random(dataset.games)
     print(f"games similar to '{game["title"]}' (https://roblox.com/games/{game["rpid"]}):")
     for pred in model.similar([game["id"]], k=10):
-        __game = dataset.game_get(pred)
+        __game = dataset.games[pred]
         print(f"'{__game["title"]}' (https://roblox.com/games/{__game["rpid"]})")
