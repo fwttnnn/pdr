@@ -128,7 +128,7 @@ if __name__ == "__main__":
         avg_ndcg      = 0
         avg_precision = 0
 
-        for user in dataset.__users.values():
+        for user in dataset.users.values():
             print(f"testing user: {user["id"]}")
             hit, ndcg, precision = __test(user, k)
             avg_hit += hit
@@ -136,7 +136,7 @@ if __name__ == "__main__":
             avg_precision += precision
             print()
 
-        users_len = len(dataset.__users)
+        users_len = len(dataset.users)
         avg_hit       /= users_len
         avg_ndcg      /= users_len
         avg_precision /= users_len

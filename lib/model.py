@@ -29,11 +29,11 @@ __pre_compute_embeddings()
 def similar(game_ids: list[int], k: int = 10) -> list[tuple]:
     predictions: list[tuple] = []
 
-    game_ids = set(game_ids)
-    embeddings = [game["__embed"] for game in dataset.games.values() if game["id"] in game_ids]
-
     min_popularity = dataset.games[game_ids[0]]["favorite"]
     max_popularity = dataset.games[game_ids[0]]["favorite"]
+
+    game_ids = set(game_ids)
+    embeddings = [game["__embed"] for game in dataset.games.values() if game["id"] in game_ids]
 
     for game in dataset.games.values():
         popularity = game["favorite"]

@@ -111,18 +111,15 @@ def __process_games():
 
         batch -= 1
 
-    dump(CSV_GAMES_FILEPATH, [{
-            "id":            game["id"],
-            "rpid":          game["rpid"],
-            "title":         game["title"],
-            "description":   game["description"],
-            "genres":        "|".join(game["genres"]),
-            "visits":        game["visits"],
-            "favorite":      game["favorite"],
-            "created":       game["created"],
-            "updated":       game["updated"],
-        } for game in games.values()], 
-        ["id", "rpid", "title", "description", "genres", "visits", "favorite", "created", "updated"])
+    dump(CSV_GAMES_FILEPATH,
+         [{"id":           g["id"],
+           "rpid":         g["rpid"],
+           "title":        g["title"],
+           "description":  g["description"],
+           "genres":       "|".join(g["genres"]),
+           "visits":       g["visits"],
+           "favorite":     g["favorite"]} for g in games.values()],
+         ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
 
 def __random(d: dict) -> dict:
     import random
