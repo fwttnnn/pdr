@@ -11,6 +11,21 @@ def __run_server():
     import starlette.requests
     import uvicorn
 
+    async def random(request: starlette.requests.Request):
+        n = request.query_params["n"] if "n" in request.query_params else 10
+        try:
+            n = int(n)
+        except:
+            return starlette.responses.JSONResponse({ "error": "Specified n should be an integer" })
+
+        game = dataset.__random(dataset.games)
+        return starlette.responses.JSONResponse({
+            "data": {
+                "game": game,
+                "recommendations": [dataset.games[pred] for pred in model.similar([game["id"]], k=n)],
+            }
+        })
+
     async def recommend(request: starlette.requests.Request):
         if "id" not in request.query_params:
             return starlette.responses.JSONResponse({ "error": "No id specified" })
@@ -30,14 +45,12 @@ def __run_server():
         if not dataset.games[id]:
             return starlette.responses.JSONResponse({ "error": "Specified game does not exist" })
 
-        games = [dataset.games[pred] for pred in model.similar([id], k=n)]
-        games = list(map(lambda game: {k: v for k, v in game.items() if k not in {"__embed"}}, games))
-
         return starlette.responses.JSONResponse({
-            "data": games
+            "data": [dataset.games[pred] for pred in model.similar([id], k=n)]
         })
 
     uvicorn.run(starlette.applications.Starlette(debug=False, routes=[
+        starlette.routing.Route("/random", random),
         starlette.routing.Route("/recommend", recommend)
     ]))
 
@@ -136,7 +149,7 @@ if __name__ == "__main__":
             avg_precision += precision
             print()
 
-        users_len = len(dataset.users)
+        users_len      = len(dataset.users)
         avg_hit       /= users_len
         avg_ndcg      /= users_len
         avg_precision /= users_len
