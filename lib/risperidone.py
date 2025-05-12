@@ -12,8 +12,6 @@ def __run_server():
     import requests
     import uvicorn
 
-    dataset.__load()
-
     async def __html_home(request: starlette.requests.Request):
         with open("lib/ui/home.html", "r", encoding="utf-8") as f:
             return starlette.responses.HTMLResponse(f.read())
@@ -22,11 +20,11 @@ def __run_server():
         with open("lib/ui/recommend.html", "r", encoding="utf-8") as f:
             return starlette.responses.HTMLResponse(f.read())
 
-    async def icons(request: starlette.requests.Request):
+    async def __proxy_icons(request: starlette.requests.Request):
         data = requests.get(f"https://thumbnails.roblox.com/v1/games/icons?universeIds={request.query_params["ids"]}&returnPolicy=PlaceHolder&size=128x128&format=Webp&isCircular=false").json()
         return starlette.responses.JSONResponse(data)
     
-    async def games(request: starlette.requests.Request):
+    async def __api_games(request: starlette.requests.Request):
         page = request.query_params["page"] if "page" in request.query_params else 0
         try:
             page = int(page)
@@ -44,7 +42,7 @@ def __run_server():
             }
         })
 
-    async def random(request: starlette.requests.Request):
+    async def __api_random(request: starlette.requests.Request):
         n = request.query_params["n"] if "n" in request.query_params else 10
         try:
             n = int(n)
@@ -59,7 +57,7 @@ def __run_server():
             }
         })
 
-    async def recommend(request: starlette.requests.Request):
+    async def __api_recommend(request: starlette.requests.Request):
         if "id" not in request.query_params:
             return starlette.responses.JSONResponse({ "error": "No id specified" })
 
@@ -84,11 +82,11 @@ def __run_server():
 
     uvicorn.run(starlette.applications.Starlette(debug=False, routes=[
         starlette.routing.Route("/", __html_home),
-        starlette.routing.Route("/recommend", __html_recommend),
-        starlette.routing.Route("/proxy/icons", icons),
-        starlette.routing.Route("/api/v1/games", games),
-        starlette.routing.Route("/api/v1/random", random),
-        starlette.routing.Route("/api/v1/recommend", recommend)
+        starlette.routing.Route("/recommend/{id}", __html_recommend),
+        starlette.routing.Route("/proxy/icons", __proxy_icons),
+        starlette.routing.Route("/api/v1/games", __api_games),
+        starlette.routing.Route("/api/v1/random", __api_random),
+        starlette.routing.Route("/api/v1/recommend", __api_recommend)
     ]))
 
 def __test(user: dict, k=10):
@@ -161,7 +159,7 @@ def __test(user: dict, k=10):
 
 if __name__ == "__main__":
     import dataset
-    # import model
+    import model
     import sys
 
     if "--process" in sys.argv:
