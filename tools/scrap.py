@@ -103,9 +103,6 @@ def scrap(uid: int):
         dataset.games[game["id"]] = game
 
 if __name__ == "__main__":
-    dataset.CSV_USERS_FILEPATH = "data/users--migrated.csv"
-    dataset.CSV_GAMES_FILEPATH = "data/games--migrated.csv"
-
     dataset.__load()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
@@ -114,18 +111,9 @@ if __name__ == "__main__":
             executor.submit(scrap, uid)
 
     dataset.dump(dataset.CSV_USERS_FILEPATH,
-                 [{"id":        u["id"],
-                   "favorites": "|".join(map(str, u["favorites"])), 
-                   "history":   "|".join(map(str, u["history"])),
-                   "friends":   "|".join(map(str, u["friends"]))} for u in dataset.users.values()],
+                 list(dataset.users.values()),
                  ["id", "favorites", "history", "friends"])
 
     dataset.dump(dataset.CSV_GAMES_FILEPATH,
-                 [{"id":           g["id"],
-                   "rpid":         g["rpid"],
-                   "title":        g["title"],
-                   "description":  g["description"],
-                   "genres":       "|".join(g["genres"]),
-                   "visits":       g["visits"],
-                   "favorite":     g["favorite"]} for g in dataset.games.values()],
+                 list(dataset.games.values()),
                  ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
