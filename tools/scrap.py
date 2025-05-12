@@ -9,7 +9,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent.joinpath(
 
 import time
 import random
-import threading
+import concurrent.futures
 import re
 import requests
 import emoji
@@ -17,7 +17,12 @@ import dataset
 
 def __roblox_api_get(url: str, cookies = None, retrying = False) -> dict:
     print(url + (" retrying.." if retrying else ""), file=sys.stderr)
-    resp = requests.get(url, cookies=cookies).json()
+
+    try:
+        resp = requests.get(url, cookies=cookies).json()
+    except:
+        time.sleep(random.uniform(0.8, 1.5)) # 0.8 - 1.5 secs sleep
+        return __roblox_api_get(url, retrying=True)
 
     if "errors" in resp:
         time.sleep(random.uniform(0.8, 1.5)) # 0.8 - 1.5 secs sleep
@@ -103,15 +108,10 @@ if __name__ == "__main__":
 
     dataset.__load()
 
-    uids = []
-
-    N_USERS_PER_CHUNK: int = 8
-    chunks = [uids[i:i + N_USERS_PER_CHUNK] for i in range(0, len(uids), N_USERS_PER_CHUNK)]
-
-    for chunk in chunks:
-        threads = [threading.Thread(target=scrap, args=(uid, )) for uid in chunk]
-        for t in threads: t.start()
-        for t in threads: t.join()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        uids = []
+        for uid in uids:
+            executor.submit(scrap, uid)
 
     dataset.dump(dataset.CSV_USERS_FILEPATH,
                  [{"id":        u["id"],
