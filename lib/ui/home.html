@@ -16,7 +16,18 @@
         }
 
         header {
-            margin: 10px 0px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            margin-top: 10px;
+            margin-bottom: 30px;
+
+            a {
+                text-decoration: none;
+                color: white;
+            }
         }
 
         #grid {
@@ -34,17 +45,17 @@
 <body>
     <main>
         <header>
+            <h1><a href="/">Risperidone</a></h1>
             <form id="form--search">
                 <input type="text" name="search" placeholder="Search.." />
                 <button type="submit">Search</button>
             </form>
         </header>
         <div id="grid"></div>
-        <div id="last" style="height: 1px;"></div>
     </main>
     <script>
-        let lastElement = document.querySelector("#last");
         let gridElement = document.querySelector("#grid");
+        let lastElement = gridElement;
         let page = 0;
 
         let formElement = document.querySelector("#form--search");
@@ -83,6 +94,8 @@
                         divElement.append(anchorElement);
                         divElement.append(spanElement);
                         gridElement.append(divElement);
+
+                        lastElement = divElement;
                     });
 
                     fetch(`/proxy/icons?ids=${data["data"]["games"].map((game) => game["id"]).join(",")}`)
