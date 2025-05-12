@@ -3,9 +3,11 @@ import io
 import os
 import pickle
 
-CSV_GAMES_FILEPATH = "data/games.csv"
-CSV_USERS_FILEPATH = "data/users.csv"
+EMBEDDINGS_FILEPATH = "data/embeddings.pkl"
+CSV_GAMES_FILEPATH  = "data/games.csv"
+CSV_USERS_FILEPATH  = "data/users.csv"
 
+embeddings: dict       = {}
 games: dict[int, dict] = {}
 users: dict[int, dict] = {}
 
@@ -16,18 +18,6 @@ def load(path: str) -> list[dict[str, str]]:
 
     return []
 
-def load_nth_row(path: str, nth: int) -> set[int]:
-    with open(path, mode="r", newline="", encoding="utf-8") as f:
-        reader = csv.reader(f)
-
-        ids = [row[nth] for row in reader]
-        if len(ids) >= 1:
-            ids.pop(0)
-
-        return set(map(int, ids))
-
-    return set()
-
 def dump(path: str, objects: list[dict], headers: list[str]):
     with open(path, mode="w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=headers)
@@ -36,15 +26,6 @@ def dump(path: str, objects: list[dict], headers: list[str]):
             w.writeheader()
         
         w.writerows(objects)
-
-def insert_headers(path: str, headers: list[str]) -> tuple[io.TextIOWrapper, csv.DictWriter]:
-    f = open(path, mode="a", newline="", encoding="utf-8")
-    w = csv.DictWriter(f, fieldnames=headers)
-
-    if os.stat(path).st_size == 0:
-        w.writeheader()
-
-    return f, w
 
 def ensure_exist(path: str):
     if not os.path.exists(path):
@@ -72,19 +53,20 @@ def __load():
         users[user["id"]] = user
 
 def __load_embeddings() -> dict:
-    from os.path import exists
+    global embeddings
 
-    if not exists("data/embeddings.pkl"):
-        with open("data/embeddings.pkl", "wb") as f:
+    if not os.path.exists(EMBEDDINGS_FILEPATH):
+        with open(EMBEDDINGS_FILEPATH, "wb") as f:
             pickle.dump({}, f)
 
-    with open("data/embeddings.pkl", "rb") as f:
+    with open(EMBEDDINGS_FILEPATH, "rb") as f:
         embeddings = pickle.load(f)
         return embeddings
     
 def __save_embeddings():
-    with open("data/embeddings.pkl", "wb") as f:
-        embeddings = {k: v["__embed"] for k, v in games.items()}
+    global embeddings
+
+    with open(EMBEDDINGS_FILEPATH, "wb") as f:
         pickle.dump(embeddings, f)
 
 def __process_games():
@@ -112,13 +94,7 @@ def __process_games():
         batch -= 1
 
     dump(CSV_GAMES_FILEPATH,
-         [{"id":           g["id"],
-           "rpid":         g["rpid"],
-           "title":        g["title"],
-           "description":  g["description"],
-           "genres":       "|".join(g["genres"]),
-           "visits":       g["visits"],
-           "favorite":     g["favorite"]} for g in games.values()],
+         list(games.values()),
          ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
 
 def __random(d: dict) -> dict:

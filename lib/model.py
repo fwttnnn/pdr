@@ -9,16 +9,15 @@ from sentence_transformers import SentenceTransformer
 model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
 
 def __pre_compute_embeddings():
-    for id, embedding in dataset.__load_embeddings().items():
-        dataset.games[id]["__embed"] = embedding
+    dataset.__load_embeddings()
 
     added = False
     for game in dataset.games.values():
-        if "__embed" in game:
+        if game["id"] in dataset.embeddings:
             continue
         
         added = True
-        game["__embed"] = model.encode(nlp.lemmatize(game), convert_to_tensor=True)
+        dataset.embeddings[game["id"]] = model.encode(nlp.lemmatize(game), convert_to_tensor=True)
 
     if added:
         dataset.__save_embeddings()
@@ -32,18 +31,17 @@ def similar(game_ids: list[int], k: int = 10) -> list[tuple]:
     min_popularity = dataset.games[game_ids[0]]["favorite"]
     max_popularity = dataset.games[game_ids[0]]["favorite"]
 
-    game_ids = set(game_ids)
-    embeddings = [game["__embed"] for game in dataset.games.values() if game["id"] in game_ids]
+    __set_game_ids = set(game_ids)
 
     for game in dataset.games.values():
         popularity = game["favorite"]
         min_popularity = min(min_popularity, popularity)
         max_popularity = max(max_popularity, popularity)
 
-        if game["id"] in game_ids:
+        if game["id"] in __set_game_ids:
             continue
 
-        similarities = [sentence_transformers.util.cos_sim(embedding, game["__embed"]).item() for embedding in embeddings]
+        similarities = [sentence_transformers.util.cos_sim(dataset.embeddings[id], dataset.embeddings[game["id"]]).item() for id in game_ids]
         predictions.append((torch.mean(torch.tensor(similarities)), game["id"]))
     
     COSINE_SIMILARITY_WEIGHT = 0.7
