@@ -57,11 +57,9 @@ def game_convert_root_place_id(rpid: int) -> int:
     return resp["universeId"]
 
 def game_get_details(game_ids: list[int]) -> list[dict]:
-    N_GAMES_PER_CHUNK: int = 50 # roblox's api docs says 100 is the limit, but we can only do 50
-    chunks = [game_ids[i:i + N_GAMES_PER_CHUNK] for i in range(0, len(game_ids), N_GAMES_PER_CHUNK)]
-
     games = []
-    for chunk in chunks:
+
+    for chunk in batch(game_ids, 50):
         resp = __roblox_api_get(f"https://games.roblox.com/v1/games?universeIds={",".join(map(str, chunk))}")
         games.extend([{
             "id":           game["id"],
@@ -102,8 +100,34 @@ def scrap(uid: int):
     for game in game_get_details(game_ids_to_be_scrapped):
         dataset.games[game["id"]] = game
 
+def batch(lst: list, n: int) -> list[list]:
+    return [lst[i:i + n] for i in range(0, len(lst), n)]
+
 if __name__ == "__main__":
     dataset.__load()
+
+    if "--update" in sys.argv:
+        games = {}
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            chunks = batch(list(dataset.games.keys()), 50)
+            futures = [executor.submit(game_get_details, chunk) for chunk in chunks]
+
+            for future in concurrent.futures.as_completed(futures):
+                for game in future.result():
+                    games[game["id"]] = game
+                
+        dataset.dump("data/games--updated.csv",
+                     [{"id":           g["id"],
+                       "rpid":         g["rpid"],
+                       "title":        g["title"],
+                       "description":  g["description"],
+                       "genres":       "|".join(g["genres"]),
+                       "visits":       g["visits"],
+                       "favorite":     g["favorite"]} for g in games.values()],
+                     ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
+        
+        sys.exit(0)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         uids = []
@@ -111,9 +135,18 @@ if __name__ == "__main__":
             executor.submit(scrap, uid)
 
     dataset.dump(dataset.CSV_USERS_FILEPATH,
-                 list(dataset.users.values()),
+                 [{"id":        u["id"],
+                   "favorites": "|".join(map(str, u["favorites"])), 
+                   "history":   "|".join(map(str, u["history"])),
+                   "friends":   "|".join(map(str, u["friends"]))} for u in dataset.users.values()],
                  ["id", "favorites", "history", "friends"])
 
     dataset.dump(dataset.CSV_GAMES_FILEPATH,
-                 list(dataset.games.values()),
+                 [{"id":           g["id"],
+                   "rpid":         g["rpid"],
+                   "title":        g["title"],
+                   "description":  g["description"],
+                   "genres":       "|".join(g["genres"]),
+                   "visits":       g["visits"],
+                   "favorite":     g["favorite"]} for g in dataset.games.values()],
                  ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
