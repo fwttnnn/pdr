@@ -74,26 +74,19 @@ def __process_games():
     import time
     from collections import Counter
 
-    batch = -1
+    __ids = [id for id in games.keys() if games[id]["genres"][1] == ""]
+    __ids_len = len(__ids)
 
-    for id, game in games.items():
-        if batch == 0:
-            break
-
-        if game["title"] == "[ Content Deleted ]" or game["genres"][1] != "":
-            continue
-
+    for i, id in enumerate(__ids):
         start = time.time()
 
         genres = Counter([games[pred]["genres"][1] for pred in model.similar([id], k=50)]).most_common()
-        game["genres"][1] = next(filter(lambda genre: genre[0] != "", genres), ("", ))[0]
+        games[id]["genres"][1] = next(filter(lambda genre: genre[0] != "", genres), ("", ))[0]
 
         end = time.time()
-        print(f"{id} Elapsed time: {end - start:.4f} seconds")
+        print(f"{id} Elapsed time: {end - start:.4f} seconds ({i + 1} out of {__ids_len})")
 
-        batch -= 1
-
-    dump(CSV_GAMES_FILEPATH,
+    dump("data/games--processed.csv",
          [{"id":           g["id"],
            "rpid":         g["rpid"],
            "title":        g["title"],
