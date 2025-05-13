@@ -8,10 +8,10 @@ def lemmatize(game: dict) -> str:
     doc = __nlp(f"{game["title"].lower()} {" ".join(game["genres"]).lower()} {desc}")
 
     tokens = [token.lemma_ for token in doc
-            if token.pos_ in {"NOUN", "PROPN", "ADJ", "VERB"} 
-                and len(token.lemma_) >= 3
-                and not token.like_url
-                and not token.like_email
-                and not token.like_num]
+                if token.pos_ in {"NOUN", "PROPN", "ADJ", "VERB"} 
+                    and len(token.lemma_) >= 3
+                    and not token.like_url
+                    and not token.like_email
+                    and not token.like_num]
 
     return " ".join(tokens)
