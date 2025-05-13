@@ -90,14 +90,7 @@ def scrap(uid: int):
         rpids[rpid] = game_id
         dataset.users[uid]["history"].append(game_id)
 
-    game_ids_to_be_scrapped = []
-    for game_id in [id for id in dataset.users[uid]["favorites"] + list(set(dataset.users[uid]["history"]))]:
-        if game_id in dataset.games:
-            continue
-        
-        game_ids_to_be_scrapped.append(game_id)
-
-    for game in game_get_details(game_ids_to_be_scrapped):
+    for game in game_get_details([id for id in list(set(dataset.users[uid]["favorites"] + list(set(dataset.users[uid]["history"])))) if id not in dataset.games]):
         dataset.games[game["id"]] = game
 
 def batch(lst: list, n: int) -> list[list]:
