@@ -132,7 +132,10 @@ def __test(user: dict, k=10):
     most_liked_genres = set()
     ngames = 0
     
-    for (genre, count) in Counter([game["genres"][1] for game in hist__]).most_common():
+    ratios = Counter([game["genres"][1] for game in hist__]).most_common()
+    print(ratios)
+
+    for (genre, count) in ratios:
         most_liked_genres.add(genre)
         ngames += count
 
@@ -179,7 +182,7 @@ if __name__ == "__main__":
         for user in dataset.users.values():
             print(f"testing user: {user["id"]}")
             hit, ndcg, precision = __test(user, k)
-            avg_hit += hit
+            avg_hit += (1 if hit else 0)
             avg_ndcg += ndcg
             avg_precision += precision
             print()
@@ -188,7 +191,7 @@ if __name__ == "__main__":
         avg_hit       /= users_len
         avg_ndcg      /= users_len
         avg_precision /= users_len
-        print(f"Average Hit@{k}: {avg_hit:.2f}, Average NDCG@{k}: {avg_ndcg:.2f}, Average Precision@{k}: {avg_precision:.2f}")
+        print(f"Average HR@{k}: {avg_hit:.2f}, Average NDCG@{k}: {avg_ndcg:.2f}, Average Precision@{k}: {avg_precision:.2f}")
         sys.exit(0)
 
     game = dataset.__random(dataset.games)
