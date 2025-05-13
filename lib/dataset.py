@@ -9,11 +9,12 @@ games: dict[int, dict] = {}
 users: dict[int, dict] = {}
 
 def load(path: str) -> list[dict[str, str]]:
+    if not os.path.exists(path):
+        open(path, "w").close()
+
     with open(path, mode="r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         return [row for row in reader]
-
-    return []
 
 def dump(path: str, objects: list[dict], headers: list[str]):
     with open(path, mode="w", newline="", encoding="utf-8") as f:
@@ -24,15 +25,8 @@ def dump(path: str, objects: list[dict], headers: list[str]):
         
         w.writerows(objects)
 
-def ensure_exist(path: str):
-    if not os.path.exists(path):
-        open(path, "w").close()
-
 def __load():
     global games, users
-
-    ensure_exist(CSV_GAMES_FILEPATH)
-    ensure_exist(CSV_USERS_FILEPATH)
 
     for game in load(CSV_GAMES_FILEPATH):
         game["id"] = int(game["id"])
@@ -79,6 +73,5 @@ def __process_games():
 def __random(d: dict) -> dict:
     import random
 
-    ids = list(d.keys())
-    id = ids[random.randint(0, len(ids) - 1)]
+    id = random.choice(list(d.keys()))
     return d[id]
