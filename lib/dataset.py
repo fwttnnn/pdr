@@ -1,9 +1,6 @@
 import csv
-import io
 import os
-import pickle
 
-EMBEDDINGS_FILEPATH = "data/embeddings.pkl"
 CSV_GAMES_FILEPATH  = "data/games.csv"
 CSV_USERS_FILEPATH  = "data/users.csv"
 
@@ -51,23 +48,6 @@ def __load():
         user["history"] = list(map(int, user["history"].split("|"))) if user["history"] != "" else []
         user["friends"] = list(map(int, user["friends"].split("|"))) if user["friends"] != "" else []
         users[user["id"]] = user
-
-def __load_embeddings() -> dict:
-    global embeddings
-
-    if not os.path.exists(EMBEDDINGS_FILEPATH):
-        with open(EMBEDDINGS_FILEPATH, "wb") as f:
-            pickle.dump({}, f)
-
-    with open(EMBEDDINGS_FILEPATH, "rb") as f:
-        embeddings = pickle.load(f)
-        return embeddings
-    
-def __save_embeddings():
-    global embeddings
-
-    with open(EMBEDDINGS_FILEPATH, "wb") as f:
-        pickle.dump(embeddings, f)
 
 def __process_games():
     import model
