@@ -3,7 +3,7 @@ import re
 
 __nlp: spacy.Language = spacy.load("en_core_web_sm")
 
-def lemmatize(game: dict[str, str]) -> str:
+def lemmatize(game: dict) -> str:
     desc = re.sub(r"\\n", r"\n", game["description"].lower())
     doc = __nlp(f"{game["title"].lower()} {" ".join(game["genres"]).lower()} {desc}")
 
