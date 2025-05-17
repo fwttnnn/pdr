@@ -1,8 +1,8 @@
 import csv
 import os
 
-CSV_GAMES_FILEPATH  = "data/games.csv"
-CSV_USERS_FILEPATH  = "data/users.csv"
+CSV_GAMES_FILEPATH = "data/games.csv"
+CSV_USERS_FILEPATH = "data/users.csv"
 
 embeddings: dict       = {}
 games: dict[int, dict] = {}
