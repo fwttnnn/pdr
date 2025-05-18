@@ -151,7 +151,7 @@ if __name__ == "__main__":
     if "--from-usernames" in sys.argv:
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             f = open(sys.argv[-1], "r")
-            usernames = f.readlines()
+            usernames = [line.strip() for line in f]
             f.close()
 
             chunks = batch(usernames, 100)
@@ -165,24 +165,26 @@ if __name__ == "__main__":
 
         sys.exit(0)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         uids = []
-        for uid in uids:
-            executor.submit(scrap, uid)
 
-    dataset.dump(dataset.CSV_USERS_FILEPATH,
-                 [{"id":        u["id"],
-                   "favorites": "|".join(map(str, u["favorites"])), 
-                   "history":   "|".join(map(str, u["history"])),
-                   "friends":   "|".join(map(str, u["friends"]))} for u in dataset.users.values()],
-                 ["id", "favorites", "history", "friends"])
+        for chunk in batch(uids, 10):
+            futures = [executor.submit(scrap, uid) for uid in chunk]
+            for _ in concurrent.futures.as_completed(futures): pass
 
-    dataset.dump(dataset.CSV_GAMES_FILEPATH,
-                 [{"id":           g["id"],
-                   "rpid":         g["rpid"],
-                   "title":        g["title"],
-                   "description":  g["description"],
-                   "genres":       "|".join(g["genres"]),
-                   "visits":       g["visits"],
-                   "favorite":     g["favorite"]} for g in dataset.games.values()],
-                 ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
+            dataset.dump(dataset.CSV_USERS_FILEPATH,
+                        [{"id":        u["id"],
+                          "favorites": "|".join(map(str, u["favorites"])), 
+                          "history":   "|".join(map(str, u["history"])),
+                          "friends":   "|".join(map(str, u["friends"]))} for u in dataset.users.values()],
+                          ["id", "favorites", "history", "friends"])
+
+            dataset.dump(dataset.CSV_GAMES_FILEPATH,
+                        [{"id":           g["id"],
+                          "rpid":         g["rpid"],
+                          "title":        g["title"],
+                          "description":  g["description"],
+                          "genres":       "|".join(g["genres"]),
+                          "visits":       g["visits"],
+                          "favorite":     g["favorite"]} for g in dataset.games.values()],
+                          ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
