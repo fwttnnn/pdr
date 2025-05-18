@@ -48,27 +48,41 @@ def __process_games():
     import time
     from collections import Counter
 
-    __ids = [id for id in games.keys() if games[id]["genres"][1] == ""]
-    __ids_len = len(__ids)
+    global games, users
+    
+    ids = [id for id in games.keys() if games[id]["genres"][1] == ""]
+    ids_length = len(ids)
 
-    for i, id in enumerate(__ids):
+    for i, id in enumerate(ids):
         start = time.time()
 
         genres = Counter([games[pred]["genres"][1] for pred in model.similar([id], k=50)]).most_common()
         games[id]["genres"][1] = next(filter(lambda genre: genre[0] != "", genres), ("", ))[0]
 
         end = time.time()
-        print(f"{id} Elapsed time: {end - start:.4f} seconds ({i + 1} out of {__ids_len})")
+        print(f"{id} Elapsed time: {end - start:.4f} seconds ({i + 1} out of {ids_length})")
 
-    dump("data/games--processed.csv",
-         [{"id":           g["id"],
-           "rpid":         g["rpid"],
-           "title":        g["title"],
-           "description":  g["description"],
-           "genres":       "|".join(g["genres"]),
-           "visits":       g["visits"],
-           "favorite":     g["favorite"]} for g in games.values()],
-         ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
+        if i % 200 == 0:
+            print("Saving..")
+            dump(CSV_GAMES_FILEPATH,
+                [{"id":           g["id"],
+                  "rpid":         g["rpid"],
+                  "title":        g["title"],
+                  "description":  g["description"],
+                  "genres":       "|".join(g["genres"]),
+                  "visits":       g["visits"],
+                  "favorite":     g["favorite"]} for g in games.values()],
+                  ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
+
+    dump(CSV_GAMES_FILEPATH,
+        [{"id":           g["id"],
+          "rpid":         g["rpid"],
+          "title":        g["title"],
+          "description":  g["description"],
+          "genres":       "|".join(g["genres"]),
+          "visits":       g["visits"],
+          "favorite":     g["favorite"]} for g in games.values()],
+          ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
 
 def __random(d: dict) -> dict:
     import random
