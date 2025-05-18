@@ -2,6 +2,7 @@ import dataset
 import embeddings
 import nlp
 
+import threading
 import torch
 from sentence_transformers import SentenceTransformer
 
@@ -11,11 +12,21 @@ model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
 def __pre_compute_embeddings():
     dataset.embeddings = embeddings.load()
 
-    for game in dataset.games.values():
-        if game["id"] in dataset.embeddings:
-            continue
-        
-        dataset.embeddings[game["id"]] = model.encode(nlp.lemmatize(game), convert_to_tensor=True)
+    def batch(lst: list, n: int) -> list[list]:
+        return [lst[i:i + n] for i in range(0, len(lst), n)]
+    
+    def generate_embedding(game_id: int):
+        print(f"Risperidone: generating embeddings for {game_id}")
+        dataset.embeddings[game_id] = model.encode(nlp.lemmatize(dataset.games[game_id]), convert_to_tensor=True)
+
+    for chunk in batch([id for id in dataset.games.keys() if id not in dataset.embeddings], 10):
+        threads = [threading.Thread(target=generate_embedding, args=(id, )) for id in chunk]
+
+        for t in threads:
+            t.start()
+
+        for t in threads:
+            t.join()
 
     embeddings.save(dataset.embeddings)
 
