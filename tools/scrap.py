@@ -49,7 +49,9 @@ def user_get_ids_by_usernames(usernames: list[str]) -> list[int]:
     ids =  []
 
     for chunk in batch(usernames, 50):
-        resp = __roblox_api_post("https://users.roblox.com/v1/usernames/users", data={ "usernames": chunk, "excludeBannedUsers": True })
+        resp = __roblox_api_post("https://users.roblox.com/v1/usernames/users", data={
+            "usernames": chunk,
+            "excludeBannedUsers": True })
         ids.extend([u["id"] for u in resp["data"]])
     
     return ids
@@ -152,14 +154,14 @@ if __name__ == "__main__":
             usernames = f.readlines()
             f.close()
 
-            chunks = batch(usernames, 50)
+            chunks = batch(usernames, 100)
             futures = [executor.submit(user_get_ids_by_usernames, chunk) for chunk in chunks]
 
-            ids = []
+            # TODO: need further investigation
+            #       doesn't fully scrap all of the users
             for future in concurrent.futures.as_completed(futures):
-                ids.extend(future.result())
-            
-            print(ids)
+                for id in future.result():
+                    print(id)
 
         sys.exit(0)
 
