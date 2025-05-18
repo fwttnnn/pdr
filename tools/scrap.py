@@ -30,6 +30,30 @@ def __roblox_api_get(url: str, cookies = None, retrying = False) -> dict:
     
     return resp
 
+def __roblox_api_post(url: str, cookies = None, data = {}, retrying = False) -> dict:
+    print(url + (" retrying.." if retrying else ""), file=sys.stderr)
+
+    try:
+        resp = requests.post(url, cookies=cookies, json=data).json()
+    except:
+        time.sleep(random.uniform(0.8, 1.5)) # 0.8 - 1.5 secs sleep
+        return __roblox_api_post(url, retrying=True)
+
+    if "errors" in resp:
+        time.sleep(random.uniform(0.8, 1.5)) # 0.8 - 1.5 secs sleep
+        return __roblox_api_post(url, retrying=True)
+    
+    return resp
+
+def user_get_ids_by_usernames(usernames: list[str]) -> list[int]:
+    ids =  []
+
+    for chunk in batch(usernames, 50):
+        resp = __roblox_api_post("https://users.roblox.com/v1/usernames/users", data={ "usernames": chunk, "excludeBannedUsers": True })
+        ids.extend([u["id"] for u in resp["data"]])
+    
+    return ids
+
 def user_get_friends(user_id: int) -> list[int]:
     resp = __roblox_api_get(f"https://friends.roblox.com/v1/users/{user_id}/friends")
     return [user_detail["id"] for user_detail in resp["data"]]
@@ -120,6 +144,23 @@ if __name__ == "__main__":
                        "favorite":     g["favorite"]} for g in games.values()],
                      ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
         
+        sys.exit(0)
+    
+    if "--from-usernames" in sys.argv:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            f = open(sys.argv[-1], "r")
+            usernames = f.readlines()
+            f.close()
+
+            chunks = batch(usernames, 50)
+            futures = [executor.submit(user_get_ids_by_usernames, chunk) for chunk in chunks]
+
+            ids = []
+            for future in concurrent.futures.as_completed(futures):
+                ids.extend(future.result())
+            
+            print(ids)
+
         sys.exit(0)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
