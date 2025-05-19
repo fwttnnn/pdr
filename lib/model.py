@@ -40,6 +40,7 @@ def similar(game_ids: list[int], k: int = 10) -> list[tuple]:
     max_popularity = dataset.games[game_ids[0]]["favorite"]
 
     __set_game_ids = set(game_ids)
+    user_embedding = torch.mean(torch.stack([dataset.embeddings[id] for id in game_ids]), dim=0)
 
     for game in dataset.games.values():
         popularity = game["favorite"]
@@ -49,8 +50,7 @@ def similar(game_ids: list[int], k: int = 10) -> list[tuple]:
         if game["id"] in __set_game_ids:
             continue
 
-        similarities = [embeddings.similarity(dataset.embeddings[id], dataset.embeddings[game["id"]]).item() for id in game_ids]
-        predictions.append((torch.mean(torch.tensor(similarities)), game["id"]))
+        predictions.append((embeddings.similarity(user_embedding, dataset.embeddings[game["id"]]), game["id"]))
     
     COSINE_SIMILARITY_WEIGHT = 0.7
     GAME_POPULARITY_WEIGHT = (1 - COSINE_SIMILARITY_WEIGHT)
