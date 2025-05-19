@@ -21,7 +21,7 @@ def __run_server():
             return starlette.responses.HTMLResponse(f.read())
 
     async def __proxy_icons(request: starlette.requests.Request):
-        data = requests.get(f"https://thumbnails.roblox.com/v1/games/icons?universeIds={request.query_params["ids"]}&returnPolicy=PlaceHolder&size=128x128&format=Webp&isCircular=false").json()
+        data = requests.get(f"https://thumbnails.roblox.com/v1/games/icons?universeIds={request.query_params['ids']}&returnPolicy=PlaceHolder&size=128x128&format=Webp&isCircular=false").json()
         return starlette.responses.JSONResponse(data)
     
     async def __api_games(request: starlette.requests.Request):
@@ -147,12 +147,12 @@ def __test(user: dict, k=10):
 
     for id in hist:
         game = dataset.games[id]
-        print(f"{game["id"]} \t ::= https://roblox.com/games/{game["rpid"]}")
+        print(f"{game['id']} \t ::= https://roblox.com/games/{game['rpid']}")
 
     predictions = model.similar(hist, k)
     for pred in predictions:
         game = dataset.games[pred]
-        print(f"{pred} \t ::= {game["id"] in future} @@@ https://roblox.com/games/{game["rpid"]}")
+        print(f"{pred} \t ::= {game['id'] in future} @@@ https://roblox.com/games/{game['rpid']}")
     
     hit, ndcg, precision = metrics(future, predictions)
     print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg:.2f}, Precision@{k}: {precision:.2f}")
@@ -180,7 +180,7 @@ if __name__ == "__main__":
         avg_precision = 0
 
         for user in dataset.users.values():
-            print(f"testing user: {user["id"]}")
+            print(f"testing user: {user['id']}")
             hit, ndcg, precision = __test(user, k)
             avg_hit += (1 if hit else 0)
             avg_ndcg += ndcg
@@ -195,7 +195,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     game = dataset.__random(dataset.games)
-    print(f"games similar to '{game["title"]}' (https://roblox.com/games/{game["rpid"]}):")
+    print(f"games similar to '{game['title']}' (https://roblox.com/games/{game['rpid']}):")
     for pred in model.similar([game["id"]], k=10):
         __game = dataset.games[pred]
-        print(f"'{__game["title"]}' (https://roblox.com/games/{__game["rpid"]})")
+        print(f"'{__game['title']}' (https://roblox.com/games/{__game['rpid']})")
