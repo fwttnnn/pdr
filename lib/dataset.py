@@ -1,6 +1,9 @@
 import csv
 import os
 
+# 512 MB
+csv.field_size_limit((1024 * 1024) * 512)
+
 CSV_GAMES_FILEPATH = "data/games.csv"
 CSV_USERS_FILEPATH = "data/users.csv"
 
