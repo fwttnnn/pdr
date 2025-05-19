@@ -86,7 +86,7 @@ def game_get_details(game_ids: list[int]) -> list[dict]:
     games = []
 
     for chunk in batch(game_ids, 50):
-        resp = __roblox_api_get(f"https://games.roblox.com/v1/games?universeIds={",".join(map(str, chunk))}")
+        resp = __roblox_api_get(f"https://games.roblox.com/v1/games?universeIds={','.join(map(str, chunk))}")
         games.extend([{
             "id":           game["id"],
             "rpid":         game["rootPlaceId"],
