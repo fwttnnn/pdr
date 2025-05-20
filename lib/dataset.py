@@ -65,7 +65,7 @@ def __process_games():
         end = time.time()
         print(f"{id} Elapsed time: {end - start:.4f} seconds ({i + 1} out of {ids_length})")
 
-        if i % 200 == 0:
+        if (i + 1) % 50 == 0:
             print("Saving..")
             dump(CSV_GAMES_FILEPATH,
                 [{"id":           g["id"],

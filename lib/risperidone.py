@@ -178,16 +178,17 @@ if __name__ == "__main__":
         avg_hit       = 0
         avg_ndcg      = 0
         avg_precision = 0
-
-        for user in dataset.users.values():
-            print(f"testing user: {user['id']}")
+        
+        users = [user for user in dataset.users.values() if len(user["favorites"]) + len(user["history"]) >= k + 3]
+        for i, user in enumerate(users):
+            print(f"{i + 1} testing user: {user['id']}")
             hit, ndcg, precision = __test(user, k)
             avg_hit += (1 if hit else 0)
             avg_ndcg += ndcg
             avg_precision += precision
             print()
 
-        users_len      = len(dataset.users)
+        users_len      = len(users)
         avg_hit       /= users_len
         avg_ndcg      /= users_len
         avg_precision /= users_len
