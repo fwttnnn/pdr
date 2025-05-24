@@ -133,7 +133,7 @@ def __test(user: dict, k=10):
     ngames = 0
     
     ratios = Counter([game["genres"][1] for game in hist__]).most_common()
-    print(ratios)
+    # print(ratios)
 
     for (genre, count) in ratios:
         most_liked_genres.add(genre)
@@ -155,7 +155,7 @@ def __test(user: dict, k=10):
         print(f"{pred} \t ::= {game['id'] in future} @@@ https://roblox.com/games/{game['rpid']}")
     
     hit, ndcg, precision = metrics(future, predictions)
-    print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg:.2f}, Precision@{k}: {precision:.2f}")
+    print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg:.4f}, Precision@{k}: {precision:.4f}")
     print(most_liked_genres)
     
     return hit, ndcg, precision
@@ -174,25 +174,44 @@ if __name__ == "__main__":
         sys.exit(0)
     
     if "--test" in sys.argv:
-        k             = 10
-        avg_hit       = 0
-        avg_ndcg      = 0
-        avg_precision = 0
+        k         = 10
+        hit       = 0
+        ndcg      = 0
+        precision = 0
+        averages: dict[int, tuple | None] = {50:   None,
+                                             100:  None,
+                                             300:  None,
+                                             500:  None,
+                                             1000: None}
         
         users = [user for user in dataset.users.values() if len(user["favorites"]) + len(user["history"]) >= k + 3]
         for i, user in enumerate(users):
             print(f"{i + 1} testing user: {user['id']}")
-            hit, ndcg, precision = __test(user, k)
-            avg_hit += (1 if hit else 0)
-            avg_ndcg += ndcg
-            avg_precision += precision
+            metrics = __test(user, k)
+
+            hit       += (1 if metrics[0] else 0)
+            ndcg      += metrics[1]
+            precision += metrics[2]
+
             print()
 
-        users_len      = len(users)
-        avg_hit       /= users_len
-        avg_ndcg      /= users_len
-        avg_precision /= users_len
-        print(f"Average HR@{k}: {avg_hit:.2f}, Average NDCG@{k}: {avg_ndcg:.2f}, Average Precision@{k}: {avg_precision:.2f}")
+            n = i + 1
+            if n in averages:
+                averages[n] = (hit / n, ndcg / n, precision / n)
+
+        for n, avg in averages.items():
+            if avg is None:
+                break
+
+            print(f"{n}: Average HR@{k}: {avg[0]:.2f}, Average NDCG@{k}: {avg[1]:.2f}, Average Precision@{k}: {avg[2]:.2f}")
+            print(f"{n}: Average HR@{k}: {avg[0]:.4f}, Average NDCG@{k}: {avg[1]:.4f}, Average Precision@{k}: {avg[2]:.4f}")
+
+        users_len  = len(users)
+        hit       /= users_len
+        ndcg      /= users_len
+        precision /= users_len
+        print(f"{users_len} (All): Average HR@{k}: {hit:.2f}, Average NDCG@{k}: {ndcg:.2f}, Average Precision@{k}: {precision:.2f}")
+        print(f"{users_len} (All): Average HR@{k}: {hit:.4f}, Average NDCG@{k}: {ndcg:.4f}, Average Precision@{k}: {precision:.4f}")
         sys.exit(0)
 
     game = dataset.__random(dataset.games)
