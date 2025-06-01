@@ -36,25 +36,23 @@ __pre_compute_embeddings()
 def similar(game_ids: list[int], k: int = 10) -> list[tuple]:
     predictions: list[tuple] = []
 
-    min_popularity = dataset.games[game_ids[0]]["favorite"]
-    max_popularity = dataset.games[game_ids[0]]["favorite"]
-
     __set_game_ids = set(game_ids)
     user_embedding = torch.mean(torch.stack([dataset.embeddings[id] for id in game_ids]), dim=0)
 
-    for game in dataset.games.values():
-        popularity = game["favorite"]
-        min_popularity = min(min_popularity, popularity)
-        max_popularity = max(max_popularity, popularity)
+    games = [g["id"] for g in dataset.games.values() if g["id"] not in __set_game_ids]
+    popularities = [g["favorite"] for g in dataset.games.values() if g["id"] not in __set_game_ids]
 
-        if game["id"] in __set_game_ids:
-            continue
+    min_popularity = min(popularities)
+    max_popularity = max(popularities)
+    popularities = [(p - min_popularity) / ((max_popularity - min_popularity) + 1e-8) for p in popularities]
 
-        predictions.append((embeddings.similarity(user_embedding, dataset.embeddings[game["id"]]), game["id"]))
-    
-    COSINE_SIMILARITY_WEIGHT = 0.7
+    __embeddings = torch.stack([dataset.embeddings[game_id] for game_id in games])
+    similarities = embeddings.similarity(user_embedding, __embeddings).squeeze(0)
+
+    COSINE_SIMILARITY_WEIGHT = 0.55
     GAME_POPULARITY_WEIGHT = (1 - COSINE_SIMILARITY_WEIGHT)
 
+    predictions = list(zip(similarities.tolist(), popularities, games))
     predictions = sorted(predictions, key=lambda x: x[0], reverse=True)[:k+50]
-    predictions = sorted(predictions, key=lambda p: COSINE_SIMILARITY_WEIGHT * float(p[0]) + GAME_POPULARITY_WEIGHT * ((dataset.games[p[1]]["favorite"] - min_popularity) / (max_popularity - min_popularity)), reverse=True)
-    return [pred[1] for pred in predictions][:k]
+    predictions = sorted(predictions, key=lambda x: COSINE_SIMILARITY_WEIGHT * x[0] + GAME_POPULARITY_WEIGHT * x[1], reverse=True)[:k+50]
+    return [pred[2] for pred in predictions][:k]
