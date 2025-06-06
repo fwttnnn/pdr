@@ -1,33 +1,11 @@
 import dataset
 import embeddings
-import nlp
-
-import concurrent.futures
-import os
 
 import torch
 from sentence_transformers import SentenceTransformer
 
 # all-MiniLM-L6-v2 | all-distilroberta-v1
 model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
-
-def __pre_compute_embeddings():
-    dataset.embeddings = embeddings.load()
-
-    def batch(lst: list, n: int) -> list[list]:
-        return [lst[i:i + n] for i in range(0, len(lst), n)]
-    
-    def generate_embedding(game_id: int):
-        print(f"Risperidone: generating embeddings for {game_id}")
-        dataset.embeddings[game_id] = model.encode(nlp.lemmatize(dataset.games[game_id]), convert_to_tensor=True)
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
-        executor.map(generate_embedding, [id for id in dataset.games.keys() if id not in dataset.embeddings])
-    
-    embeddings.save(dataset.embeddings)
-
-dataset.__load()
-__pre_compute_embeddings()
 
 def similar(game_ids: list[int], k: int = 10) -> list[tuple]:
     predictions: list[tuple] = []

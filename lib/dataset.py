@@ -11,7 +11,7 @@ embeddings: dict       = {}
 games: dict[int, dict] = {}
 users: dict[int, dict] = {}
 
-def load(path: str) -> list[dict[str, str]]:
+def load_csv(path: str) -> list[dict[str, str]]:
     if not os.path.exists(path):
         open(path, "w").close()
 
@@ -19,7 +19,7 @@ def load(path: str) -> list[dict[str, str]]:
         reader = csv.DictReader(f)
         return [row for row in reader]
 
-def dump(path: str, objects: list[dict], headers: list[str]):
+def dump_csv(path: str, objects: list[dict], headers: list[str]):
     with open(path, mode="w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=headers)
 
@@ -28,10 +28,13 @@ def dump(path: str, objects: list[dict], headers: list[str]):
         
         w.writerows(objects)
 
-def __load():
-    global games, users
+def load():
+    import embeddings as _embeddings
 
-    for game in load(CSV_GAMES_FILEPATH):
+    global games, users, embeddings
+    embeddings = _embeddings.load()
+
+    for game in load_csv(CSV_GAMES_FILEPATH):
         game["id"] = int(game["id"])
         game["rpid"] = int(game["rpid"])
         game["visits"] = int(game["visits"])
@@ -39,7 +42,7 @@ def __load():
         game["genres"] = game["genres"].split("|")
         games[game["id"]] = game
 
-    for user in load(CSV_USERS_FILEPATH):
+    for user in load_csv(CSV_USERS_FILEPATH):
         user["id"] = int(user["id"])
         user["favorites"] = list(map(int, user["favorites"].split("|"))) if user["favorites"] != "" else []
         user["history"] = list(map(int, user["history"].split("|"))) if user["history"] != "" else []
@@ -67,7 +70,7 @@ def __process_games():
 
         if (i + 1) % 50 == 0:
             print("Saving..")
-            dump(CSV_GAMES_FILEPATH,
+            dump_csv(CSV_GAMES_FILEPATH,
                 [{"id":           g["id"],
                   "rpid":         g["rpid"],
                   "title":        g["title"],
@@ -77,7 +80,7 @@ def __process_games():
                   "favorite":     g["favorite"]} for g in games.values()],
                   ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
 
-    dump(CSV_GAMES_FILEPATH,
+    dump_csv(CSV_GAMES_FILEPATH,
         [{"id":           g["id"],
           "rpid":         g["rpid"],
           "title":        g["title"],
@@ -87,7 +90,7 @@ def __process_games():
           "favorite":     g["favorite"]} for g in games.values()],
           ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
 
-def __random(d: dict) -> dict:
+def random(d: dict = games) -> dict:
     import random
 
     id = random.choice(list(d.keys()))

@@ -163,7 +163,11 @@ def __test(user: dict, k=10):
 if __name__ == "__main__":
     import dataset
     import model
+    import embeddings
     import sys
+
+    dataset.load()
+    embeddings.precompute()
 
     if "--process" in sys.argv:
         dataset.__process_games()
@@ -214,7 +218,7 @@ if __name__ == "__main__":
         print(f"{users_len} (All): Average HR@{k}: {hit:.4f}, Average NDCG@{k}: {ndcg:.4f}, Average Precision@{k}: {precision:.4f}")
         sys.exit(0)
 
-    game = dataset.__random(dataset.games)
+    game = dataset.random(dataset.games)
     print(f"games similar to '{game['title']}' (https://roblox.com/games/{game['rpid']}):")
     for pred in model.similar([game["id"]], k=10):
         __game = dataset.games[pred]
