@@ -4,6 +4,9 @@
 Recommender system for Roblox.
 """
 
+import logging
+logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
+
 def __run_server():
     import starlette.applications
     import starlette.responses

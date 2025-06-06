@@ -1,3 +1,4 @@
+import logging
 import os
 import concurrent.futures
 
@@ -23,11 +24,13 @@ def precompute(path: str = EMBEDDINGS_FILEPATH):
     import nlp, dataset
     from model import model
 
+    logger = logging.getLogger(__name__)
+
     if not dataset.embeddings:
         dataset.embeddings = load()
 
     def __compute_emb(id: int):
-        print(f"Risperidone: generating embeddings for {id}")
+        logger.info(f"Risperidone: Generating Embeddings for {id}")
         dataset.embeddings[id] = model.encode(nlp.lemmatize(dataset.games[id]), convert_to_tensor=True)
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
