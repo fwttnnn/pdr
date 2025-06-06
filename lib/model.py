@@ -2,11 +2,13 @@ import dataset
 import embeddings
 import nlp
 
-import threading
+import concurrent.futures
+import os
+
 import torch
 from sentence_transformers import SentenceTransformer
 
-# all-MiniLM-L6-v2 | all-mpnet-base-v2
+# all-MiniLM-L6-v2 | all-distilroberta-v1
 model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
 
 def __pre_compute_embeddings():
@@ -18,16 +20,10 @@ def __pre_compute_embeddings():
     def generate_embedding(game_id: int):
         print(f"Risperidone: generating embeddings for {game_id}")
         dataset.embeddings[game_id] = model.encode(nlp.lemmatize(dataset.games[game_id]), convert_to_tensor=True)
-
-    for chunk in batch([id for id in dataset.games.keys() if id not in dataset.embeddings], 10):
-        threads = [threading.Thread(target=generate_embedding, args=(id, )) for id in chunk]
-
-        for t in threads:
-            t.start()
-
-        for t in threads:
-            t.join()
-
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
+        executor.map(generate_embedding, [id for id in dataset.games.keys() if id not in dataset.embeddings][:100])
+    
     embeddings.save(dataset.embeddings)
 
 dataset.__load()
