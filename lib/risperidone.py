@@ -4,9 +4,6 @@
 Recommender system for Roblox.
 """
 
-import logging
-logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
-
 def __run_server():
     import starlette.applications
     import starlette.responses
@@ -164,6 +161,19 @@ def __test(user: dict, k=10):
     return hit, ndcg, precision
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(
+                    prog="Risperidone",
+                    description="Recommender system for Roblox.")
+    parser.add_argument("-s", "--serve", action="store_true", help="spin up a web server")
+    parser.add_argument("-t", "--test", action="store_true", help="calculate Risperidone's accuracy")
+    parser.add_argument("-v", "--verbose", action="store_true", help="turn on debugging")
+    args = parser.parse_args()
+
+    if args.verbose:
+        import logging
+        logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
+
     import dataset
     import model
     import embeddings
@@ -172,15 +182,15 @@ if __name__ == "__main__":
     dataset.load()
     embeddings.precompute()
 
-    if "--process" in sys.argv:
+    if False:
         dataset.__process_games()
         sys.exit(0)
 
-    if "--serve" in sys.argv:
+    if args.serve:
         __run_server()
         sys.exit(0)
     
-    if "--test" in sys.argv:
+    if args.test:
         k         = 10
         hit       = 0
         ndcg      = 0
