@@ -22,7 +22,7 @@ def __pre_compute_embeddings():
         dataset.embeddings[game_id] = model.encode(nlp.lemmatize(dataset.games[game_id]), convert_to_tensor=True)
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
-        executor.map(generate_embedding, [id for id in dataset.games.keys() if id not in dataset.embeddings][:100])
+        executor.map(generate_embedding, [id for id in dataset.games.keys() if id not in dataset.embeddings])
     
     embeddings.save(dataset.embeddings)
 
