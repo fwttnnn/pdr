@@ -123,7 +123,7 @@ def batch(lst: list, n: int) -> list[list]:
     return [lst[i:i + n] for i in range(0, len(lst), n)]
 
 if __name__ == "__main__":
-    dataset.__load()
+    dataset.load()
 
     if "--update" in sys.argv:
         games = {}
@@ -172,14 +172,14 @@ if __name__ == "__main__":
             futures = [executor.submit(scrap, uid) for uid in chunk]
             for _ in concurrent.futures.as_completed(futures): pass
 
-            dataset.dump(dataset.CSV_USERS_FILEPATH,
+            dataset.dump_csv(dataset.CSV_USERS_FILEPATH,
                         [{"id":        u["id"],
                           "favorites": "|".join(map(str, u["favorites"])), 
                           "history":   "|".join(map(str, u["history"])),
                           "friends":   "|".join(map(str, u["friends"]))} for u in dataset.users.values()],
                           ["id", "favorites", "history", "friends"])
 
-            dataset.dump(dataset.CSV_GAMES_FILEPATH,
+            dataset.dump_csv(dataset.CSV_GAMES_FILEPATH,
                         [{"id":           g["id"],
                           "rpid":         g["rpid"],
                           "title":        g["title"],
