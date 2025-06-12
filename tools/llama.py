@@ -49,6 +49,7 @@ if __name__ == "__main__":
 
     for chunk in batch([game for game in dataset.games.values() if game["id"] not in games], 10):
         print(f"LLaMA.py: Starting batch")
+        print(f"LLaMA.py: {[g['id'] for g in chunk]}")
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             executor.map(__apply_transform, chunk)
