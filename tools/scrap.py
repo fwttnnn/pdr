@@ -5,7 +5,7 @@ Roblox game scraper based on user's fav list and badges.
 """
 
 import sys, pathlib
-sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent.joinpath("lib")))
+sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent))
 
 import time
 import random
@@ -124,6 +124,7 @@ def batch(lst: list, n: int) -> list[list]:
 
 if __name__ == "__main__":
     dataset.load()
+    sys.exit(0)
 
     if "--update" in sys.argv:
         games = {}

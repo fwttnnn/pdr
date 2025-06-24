@@ -5,7 +5,7 @@ Preprocess descriptions with LLaMA 3.2
 """
 
 import sys, pathlib
-sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent.joinpath("lib")))
+sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent))
 
 import concurrent.futures
 import re
