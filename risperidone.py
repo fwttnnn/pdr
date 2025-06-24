@@ -90,8 +90,8 @@ def __run_server():
     ]))
 
 def test(user: dict, k=10) -> tuple[int, float, float]:
-    hist__ = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
-    hist__ = [dataset.games[id] for id in hist__ if id in dataset.games]
+    history: list[int] = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
+    games: list[dict] = [dataset.games[id] for id in history if id in dataset.games]
 
     def group():
         from collections import Counter
@@ -99,7 +99,7 @@ def test(user: dict, k=10) -> tuple[int, float, float]:
         most_liked_genres = set()
         n_games = 0
         
-        for (genre, count) in Counter([game["genres"][1] for game in hist__]).most_common():
+        for (genre, count) in Counter([game["genres"][1] for game in games]).most_common():
             most_liked_genres.add(genre)
             n_games += count
 
@@ -130,24 +130,12 @@ def test(user: dict, k=10) -> tuple[int, float, float]:
         precision = hit / k
         return hit, ndcg, precision
 
-    genres = group()
-    hist = [game["id"] for game in hist__ if game["genres"][1] in genres][:3]
-    future = [game["id"] for game in hist__]
+    genres: set[int] = group()
+    future: list[int] = [game["id"] for game in games]
+    history: list[int] = [game["id"] for game in games if game["genres"][1] in genres][:3]
 
-    for id in hist:
-        game = dataset.games[id]
-        print(f"{game['id']} \t ::= https://roblox.com/games/{game['rpid']}")
-
-    predictions = model.similar(hist, k)
-    for pred in predictions:
-        game = dataset.games[pred]
-        print(f"{pred} \t ::= {game['id'] in future} @@@ https://roblox.com/games/{game['rpid']}")
-    
-    hit, ndcg, precision = metrics(future, predictions)
-    print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg:.4f}, Precision@{k}: {precision:.4f}")
-    print(genres)
-    
-    return hit, ndcg, precision
+    predictions = model.similar(history, k)
+    return metrics(future, predictions)
 
 if __name__ == "__main__":
     import argparse
