@@ -91,6 +91,7 @@ def serve():
 
 def test(k: int = 10):
     import dataset
+    import model
 
     PREVIOUSLY_PLAYED_GAMES_LIMIT = 3
 
