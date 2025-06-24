@@ -25,7 +25,7 @@ def similar(game_ids: list[int], k: int = 10) -> list[int]:
     similarities = embeddings.similarity(user_embedding, __embeddings).squeeze(0)
 
     COSINE_SIMILARITY_WEIGHT = 0.90
-    GAME_POPULARITY_WEIGHT = 0.25
+    GAME_POPULARITY_WEIGHT   = 0.30
 
     CANDIDATE_PRE_RANK_LIMIT = 5000
 

@@ -89,29 +89,28 @@ def __run_server():
         starlette.routing.Route("/api/v1/recommend", __api_recommend)
     ]))
 
-def test(user: dict, k=10) -> tuple[int, float, float]:
-    history: list[int] = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
-    games: list[dict] = [dataset.games[id] for id in history if id in dataset.games]
+def test(user: dict, k: int = 10) -> tuple[tuple[int, float, float], list[int], list[int]]:
+    PREVIOUSLY_PLAYED_GAMES_LIMIT = 3
 
-    def group():
+    def group_most_liked_genres(games: list[dict]) -> set[str]:
         from collections import Counter
 
         most_liked_genres = set()
-        n_games = 0
+        games_total = 0
         
-        for (genre, count) in Counter([game["genres"][1] for game in games]).most_common():
+        for (genre, total) in Counter([game["genres"][1] for game in games]).most_common():
             most_liked_genres.add(genre)
-            n_games += count
+            games_total += total
 
-            if n_games >= 3:
+            if games_total >= PREVIOUSLY_PLAYED_GAMES_LIMIT:
                 break
         
         return most_liked_genres
 
-    def metrics(hist: list, predictions: list) -> tuple[int, float, float]:
+    def metrics(history: list, predictions: list) -> tuple[int, float, float]:
         import math
 
-        relevances = [int(p in hist) for p in predictions]
+        relevances = [int(p in history) for p in predictions]
         ideal_relevances = sorted(relevances, reverse=True)
         k = len(relevances)
 
@@ -130,12 +129,15 @@ def test(user: dict, k=10) -> tuple[int, float, float]:
         precision = hit / k
         return hit, ndcg, precision
 
-    genres: set[int] = group()
-    future: list[int] = [game["id"] for game in games]
-    history: list[int] = [game["id"] for game in games if game["genres"][1] in genres][:3]
+    history: list[int] = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
+    games: list[dict] = [dataset.games[id] for id in history if id in dataset.games]
+    genres: set[str] = group_most_liked_genres(games)
 
-    predictions = model.similar(history, k)
-    return metrics(future, predictions)
+    played: list[int] = [game["id"] for game in games if game["genres"][1] in genres][:PREVIOUSLY_PLAYED_GAMES_LIMIT]
+    future: list[int] = [game["id"] for game in games if game not in played]
+
+    predictions = model.similar(played, k)
+    return metrics(future, predictions), played, predictions
 
 if __name__ == "__main__":
     import argparse
@@ -159,10 +161,6 @@ if __name__ == "__main__":
     dataset.load()
     embeddings.precompute()
 
-    if False:
-        dataset.__process_games()
-        sys.exit(0)
-
     if args.serve:
         __run_server()
         sys.exit(0)
@@ -178,34 +176,31 @@ if __name__ == "__main__":
                                              500:  None,
                                              1000: None}
         
-        users = [user for user in dataset.users.values() if len(user["favorites"]) + len(user["history"]) >= k + 3]
+        users = [user for user in dataset.users.values()]
         for i, user in enumerate(users):
-            print(f"{i + 1} testing user: {user['id']}")
-            metrics = test(user, k)
+            metrics, _, _ = test(user, k)
 
             hit       += (1 if metrics[0] else 0)
             ndcg      += metrics[1]
             precision += metrics[2]
 
-            print()
-
             n = i + 1
             if n in averages:
                 averages[n] = (hit / n, ndcg / n, precision / n)
 
-        for n, avg in averages.items():
+        users_len  = len(users)
+        hit       /= users_len
+        ndcg      /= users_len
+        precision /= users_len
+        averages[users_len] = (hit, ndcg, precision)
+
+        for n, avg in sorted(averages.items()):
             if avg is None:
                 break
 
             print(f"{n}: Average HR@{k}: {avg[0]:.2f}, Average NDCG@{k}: {avg[1]:.2f}, Average Precision@{k}: {avg[2]:.2f}")
             print(f"{n}: Average HR@{k}: {avg[0]:.4f}, Average NDCG@{k}: {avg[1]:.4f}, Average Precision@{k}: {avg[2]:.4f}")
 
-        users_len  = len(users)
-        hit       /= users_len
-        ndcg      /= users_len
-        precision /= users_len
-        print(f"{users_len} (All): Average HR@{k}: {hit:.2f}, Average NDCG@{k}: {ndcg:.2f}, Average Precision@{k}: {precision:.2f}")
-        print(f"{users_len} (All): Average HR@{k}: {hit:.4f}, Average NDCG@{k}: {ndcg:.4f}, Average Precision@{k}: {precision:.4f}")
         sys.exit(0)
 
     game = dataset.random(dataset.games)

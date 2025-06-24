@@ -49,47 +49,6 @@ def load():
         user["friends"] = list(map(int, user["friends"].split("|"))) if user["friends"] != "" else []
         users[user["id"]] = user
 
-def __process_games():
-    import model
-    import time
-    from collections import Counter
-
-    global games, users
-    
-    ids = [id for id in games.keys() if games[id]["genres"][1] == ""]
-    ids_length = len(ids)
-
-    for i, id in enumerate(ids):
-        start = time.time()
-
-        genres = Counter([games[pred]["genres"][1] for pred in model.similar([id], k=50)]).most_common()
-        games[id]["genres"][1] = next(filter(lambda genre: genre[0] != "", genres), ("", ))[0]
-
-        end = time.time()
-        print(f"{id} Elapsed time: {end - start:.4f} seconds ({i + 1} out of {ids_length})")
-
-        if (i + 1) % 50 == 0:
-            print("Saving..")
-            dump_csv(CSV_GAMES_FILEPATH,
-                [{"id":           g["id"],
-                  "rpid":         g["rpid"],
-                  "title":        g["title"],
-                  "description":  g["description"],
-                  "genres":       "|".join(g["genres"]),
-                  "visits":       g["visits"],
-                  "favorite":     g["favorite"]} for g in games.values()],
-                  ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
-
-    dump_csv(CSV_GAMES_FILEPATH,
-        [{"id":           g["id"],
-          "rpid":         g["rpid"],
-          "title":        g["title"],
-          "description":  g["description"],
-          "genres":       "|".join(g["genres"]),
-          "visits":       g["visits"],
-          "favorite":     g["favorite"]} for g in games.values()],
-          ["id", "rpid", "title", "description", "genres", "visits", "favorite"])
-
 def random(d: dict = games) -> dict:
     import random
 
