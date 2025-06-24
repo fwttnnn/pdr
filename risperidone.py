@@ -92,6 +92,8 @@ def serve():
 def test(k: int = 10):
     import dataset
 
+    PREVIOUSLY_PLAYED_GAMES_LIMIT = 3
+
     def group_most_liked_genres(games: list[dict]) -> set[str]:
         from collections import Counter
 
@@ -139,8 +141,6 @@ def test(k: int = 10):
                                          1000: None}
     
     users = [user for user in dataset.users.values()]
-    PREVIOUSLY_PLAYED_GAMES_LIMIT = 3
-
     for i, user in enumerate(users):
         history: list[int] = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
         games: list[dict] = [dataset.games[id] for id in history if id in dataset.games]
