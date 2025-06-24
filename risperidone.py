@@ -89,26 +89,28 @@ def __run_server():
         starlette.routing.Route("/api/v1/recommend", __api_recommend)
     ]))
 
-def __test(user: dict, k=10):
-    import math
-
+def test(user: dict, k=10) -> tuple[int, float, float]:
     hist__ = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
     hist__ = [dataset.games[id] for id in hist__ if id in dataset.games]
 
-    def group(games: list[dict]) -> dict[str, list]:
-        groups: dict[str, list] = {}
+    def group():
+        from collections import Counter
 
-        for game in games:
-            genre = game["genres"][1]
+        most_liked_genres = set()
+        n_games = 0
+        
+        for (genre, count) in Counter([game["genres"][1] for game in hist__]).most_common():
+            most_liked_genres.add(genre)
+            n_games += count
 
-            if genre not in groups:
-                groups[genre] = []
+            if n_games >= 3:
+                break
+        
+        return most_liked_genres
 
-            groups[genre].append(game["id"])
+    def metrics(hist: list, predictions: list) -> tuple[int, float, float]:
+        import math
 
-        return groups
-
-    def metrics(hist: list, predictions: list):
         relevances = [int(p in hist) for p in predictions]
         ideal_relevances = sorted(relevances, reverse=True)
         k = len(relevances)
@@ -127,22 +129,9 @@ def __test(user: dict, k=10):
         ndcg = (dcg / idcg if idcg > 0 else 0.0)
         precision = hit / k
         return hit, ndcg, precision
-    
-    from collections import Counter
-    most_liked_genres = set()
-    ngames = 0
-    
-    ratios = Counter([game["genres"][1] for game in hist__]).most_common()
-    # print(ratios)
 
-    for (genre, count) in ratios:
-        most_liked_genres.add(genre)
-        ngames += count
-
-        if ngames >= 3:
-            break
-
-    hist = [game["id"] for game in hist__ if game["genres"][1] in most_liked_genres][:3]
+    genres = group()
+    hist = [game["id"] for game in hist__ if game["genres"][1] in genres][:3]
     future = [game["id"] for game in hist__]
 
     for id in hist:
@@ -156,7 +145,7 @@ def __test(user: dict, k=10):
     
     hit, ndcg, precision = metrics(future, predictions)
     print(f"Hit@{k}: {hit}, NDCG@{k}: {ndcg:.4f}, Precision@{k}: {precision:.4f}")
-    print(most_liked_genres)
+    print(genres)
     
     return hit, ndcg, precision
 
@@ -204,7 +193,7 @@ if __name__ == "__main__":
         users = [user for user in dataset.users.values() if len(user["favorites"]) + len(user["history"]) >= k + 3]
         for i, user in enumerate(users):
             print(f"{i + 1} testing user: {user['id']}")
-            metrics = __test(user, k)
+            metrics = test(user, k)
 
             hit       += (1 if metrics[0] else 0)
             ndcg      += metrics[1]
