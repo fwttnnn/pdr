@@ -107,8 +107,8 @@
                 return data["data"];
             };
 
-            const fetchExperiencesRecommendations = async () => {
-                const resp = await fetch(`/api/v1/recommend?ids=${[...selected].join(',')}&n=100`)
+            const fetchExperiencesRecommendations = async (ids) => {
+                const resp = await fetch(`/api/v1/recommend?ids=${ids.join(',')}&n=100`)
                 const data = await resp.json();
 
                 const icons = await fetchExperienceIcons(data["data"].map((exp) => exp.id));
@@ -147,7 +147,8 @@
                                     setPage(0);
                                     setExperiences([]);
                                     setIsAtDisoveryPage(false);
-                                    await fetchExperiencesRecommendations();
+
+                                    await fetchExperiencesRecommendations([...selected]);
                                     setSelected(new Set());
                                 })();
                             }}>
@@ -161,14 +162,14 @@
                                  ref={(i === experiences.length - 1) && isAtDisoveryPage ? lastElementRef : null}
                                  onClick={() => {
                                     setSelected((prev) => {
-                                        const next = new Set(prev);
+                                        const s = new Set(prev);
 
-                                        if (next.has(exp.id)) {
-                                            next.delete(exp.id);
+                                        if (s.has(exp.id)) {
+                                            s.delete(exp.id);
                                             return next;
                                         }
 
-                                        next.add(exp.id);
+                                        s.add(exp.id);
                                         return next;
                                     });
                                  }}>
