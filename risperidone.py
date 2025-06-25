@@ -128,7 +128,7 @@ def test(k: int = 10):
         genres: set[str] = group_most_liked_genres(games)
 
         played: list[int] = [game["id"] for game in games if game["genres"][1] in genres][:PREVIOUSLY_PLAYED_GAMES_LIMIT]
-        future: list[int] = [game["id"] for game in games if game not in played]
+        future: list[int] = [game["id"] for game in games if game["id"] not in played]
 
         predictions = model.similar(played, k)
         __hit, __ndcg, __precision = metrics(future, predictions)
