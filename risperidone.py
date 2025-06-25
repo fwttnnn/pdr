@@ -13,7 +13,7 @@ def serve():
     import uvicorn
 
     async def __html_home(request: starlette.requests.Request):
-        with open("web/home.html", "r", encoding="utf-8") as f:
+        with open("web/index.html", "r", encoding="utf-8") as f:
             return starlette.responses.HTMLResponse(f.read())
 
     async def __proxy_icons(request: starlette.requests.Request):
