@@ -13,11 +13,7 @@ def serve():
     import uvicorn
 
     async def __html_home(request: starlette.requests.Request):
-        with open("ui/home.html", "r", encoding="utf-8") as f:
-            return starlette.responses.HTMLResponse(f.read())
-
-    async def __html_recommend(request: starlette.requests.Request):
-        with open("ui/recommend.html", "r", encoding="utf-8") as f:
+        with open("web/home.html", "r", encoding="utf-8") as f:
             return starlette.responses.HTMLResponse(f.read())
 
     async def __proxy_icons(request: starlette.requests.Request):
@@ -42,28 +38,13 @@ def serve():
             }
         })
 
-    async def __api_random(request: starlette.requests.Request):
-        n = request.query_params["n"] if "n" in request.query_params else 10
-        try:
-            n = int(n)
-        except:
-            return starlette.responses.JSONResponse({ "error": "Specified n should be an integer" })
-
-        game = dataset.__random(dataset.games)
-        return starlette.responses.JSONResponse({
-            "data": {
-                "game": game,
-                "recommendations": [dataset.games[pred] for pred in model.similar([game["id"]], k=n)],
-            }
-        })
-
     async def __api_recommend(request: starlette.requests.Request):
-        if "id" not in request.query_params:
-            return starlette.responses.JSONResponse({ "error": "No id specified" })
+        if "ids" not in request.query_params:
+            return starlette.responses.JSONResponse({ "error": "No ids specified" })
 
-        id = request.query_params["id"]
+        ids = request.query_params["ids"]
         try:
-            id = int(id)
+            ids = [int(id) for id in ids.split(',')]
         except:
             return starlette.responses.JSONResponse({ "error": "Specified id should be an integer" })
 
@@ -73,19 +54,18 @@ def serve():
         except:
             return starlette.responses.JSONResponse({ "error": "Specified n should be an integer" })
 
-        if not dataset.games[id]:
-            return starlette.responses.JSONResponse({ "error": "Specified game does not exist" })
+        for id in ids:
+            if not dataset.games[id]:
+                return starlette.responses.JSONResponse({ "error": f"Specified game '{id}' does not exist" })
 
         return starlette.responses.JSONResponse({
-            "data": [dataset.games[pred] for pred in model.similar([id], k=n)]
+            "data": [dataset.games[pred] for pred in model.similar(ids, k=n)]
         })
 
     uvicorn.run(starlette.applications.Starlette(debug=False, routes=[
         starlette.routing.Route("/", __html_home),
-        starlette.routing.Route("/recommend/{id}", __html_recommend),
         starlette.routing.Route("/proxy/icons", __proxy_icons),
         starlette.routing.Route("/api/v1/games", __api_games),
-        starlette.routing.Route("/api/v1/random", __api_random),
         starlette.routing.Route("/api/v1/recommend", __api_recommend)
     ]))
 
