@@ -21,11 +21,11 @@ def __roblox_api_get(url: str, cookies = None, retrying = False) -> dict:
     try:
         resp = requests.get(url, cookies=cookies).json()
     except:
-        time.sleep(random.uniform(0.8, 1.5)) # 0.8 - 1.5 secs sleep
+        time.sleep(random.uniform(0.8, 1.5))
         return __roblox_api_get(url, retrying=True)
 
     if "errors" in resp:
-        time.sleep(random.uniform(0.8, 1.5)) # 0.8 - 1.5 secs sleep
+        time.sleep(random.uniform(0.8, 1.5))
         return __roblox_api_get(url, retrying=True)
     
     return resp
@@ -36,11 +36,11 @@ def __roblox_api_post(url: str, cookies = None, data = {}, retrying = False) -> 
     try:
         resp = requests.post(url, cookies=cookies, json=data).json()
     except:
-        time.sleep(random.uniform(0.8, 1.5)) # 0.8 - 1.5 secs sleep
+        time.sleep(random.uniform(0.8, 1.5))
         return __roblox_api_post(url, retrying=True)
 
     if "errors" in resp:
-        time.sleep(random.uniform(0.8, 1.5)) # 0.8 - 1.5 secs sleep
+        time.sleep(random.uniform(0.8, 1.5))
         return __roblox_api_post(url, retrying=True)
     
     return resp
