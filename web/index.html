@@ -166,11 +166,11 @@
 
                                         if (s.has(exp.id)) {
                                             s.delete(exp.id);
-                                            return next;
+                                            return s;
                                         }
 
                                         s.add(exp.id);
-                                        return next;
+                                        return s;
                                     });
                                  }}>
                                 <div className="grid--experience">
