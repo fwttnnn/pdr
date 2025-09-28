@@ -4,10 +4,12 @@ import concurrent.futures
 
 import pickle
 import torch
+import types
 
-EMBEDDINGS_FILEPATH = "data/embeddings.pkl"
+import dataset
+import nlp
 
-def load(path: str = EMBEDDINGS_FILEPATH) -> dict:
+def load(path: str) -> dict:
     if not os.path.exists(path):
         with open(path, "wb") as f:
             pickle.dump({}, f)
@@ -16,22 +18,19 @@ def load(path: str = EMBEDDINGS_FILEPATH) -> dict:
         embeddings = pickle.load(f)
         return embeddings
     
-def save(embeddings, path: str = EMBEDDINGS_FILEPATH):
+def save(embeddings, path: str):
     with open(path, "wb") as f:
         pickle.dump(embeddings, f)
 
-def precompute(path: str = EMBEDDINGS_FILEPATH):
-    import nlp, dataset
-    from model import model
-
+def precompute(model: types.ModuleType, path: str):
     logger = logging.getLogger(__name__)
 
     if not dataset.embeddings:
-        dataset.embeddings = load()
+        dataset.embeddings = load(path)
 
     def __compute_emb(id: int):
         logger.info(f"Risperidone: Generating Embeddings for {id}")
-        dataset.embeddings[id] = model.encode(nlp.lemmatize(dataset.games[id]), convert_to_tensor=True)
+        dataset.embeddings[id] = model.__encode(nlp.lemmatize(dataset.games[id]))
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
         executor.map(__compute_emb, [id for id in dataset.games.keys() if id not in dataset.embeddings])

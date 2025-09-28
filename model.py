@@ -2,10 +2,6 @@ import dataset
 import embeddings
 
 import torch
-from sentence_transformers import SentenceTransformer
-
-# all-MiniLM-L6-v2 | all-mpnet-base-v2 | all-distilroberta-v1 | distiluse-base-multilingual-cased-v2
-model: SentenceTransformer = SentenceTransformer("all-MiniLM-L6-v2")
 
 def similar(game_ids: list[int], k: int = 10) -> list[int]:
     predictions: list[tuple] = []

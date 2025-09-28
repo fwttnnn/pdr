@@ -29,11 +29,6 @@ def dump_csv(path: str, objects: list[dict], headers: list[str]):
         w.writerows(objects)
 
 def load():
-    import embeddings as _embeddings
-
-    global games, users, embeddings
-    embeddings = _embeddings.load()
-
     for game in load_csv(CSV_GAMES_FILEPATH):
         game["id"] = int(game["id"])
         game["rpid"] = int(game["rpid"])

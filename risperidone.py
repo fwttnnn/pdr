@@ -162,11 +162,23 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--serve", action="store_true", help="spin up a web server")
     parser.add_argument("-t", "--test", action="store_true", help="calculate Risperidone's accuracy")
     parser.add_argument("-v", "--verbose", action="store_true", help="turn on debugging")
+    parser.add_argument("-m", "--model",
+                        choices=["sbert", "ft", "w2v"],
+                        default="sbert",
+                        help="choose the embedding model: sbert, ft, or w2v (default: sbert)")
     args = parser.parse_args()
 
     if args.verbose:
         import logging
         logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
+
+    match args.model:
+        case "sbert":
+            from models import sbert as _model
+        case "ft":
+            from models import ft as _model
+        case "w2v":
+            from models import w2v as _model
 
     import dataset
     import model
@@ -174,7 +186,7 @@ if __name__ == "__main__":
     import sys
 
     dataset.load()
-    embeddings.precompute()
+    embeddings.precompute(_model, f"data/embeddings/{args.model}.pkl")
 
     if args.serve:
         serve()
