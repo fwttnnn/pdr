@@ -5,8 +5,8 @@ import torch
 ft_model_path = "cc.en.300.bin"
 ft = gensim.models.fasttext.load_facebook_model(ft_model_path)
 
-def __encode(text: str) -> torch.Tensor:
-    words = text.lower().split()
+def __encode(t: str) -> torch.Tensor:
+    words = t.lower().split()
     word_vecs = [torch.tensor(ft.wv[w], dtype=torch.float32) for w in words if w in ft.wv]
 
     if len(word_vecs) == 0:
