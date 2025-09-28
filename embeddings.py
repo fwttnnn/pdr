@@ -29,12 +29,12 @@ def precompute(model: types.ModuleType, path: str):
         dataset.embeddings = load(path)
 
     def __compute_with_gpu(batch_size=32):
-        games = [id for id in dataset.games.keys() if id not in dataset.embeddings]
-        texts = [nlp.lemmatize(dataset.games[id]) for id in games]
+        games_to_encode = [id for id in dataset.games.keys() if id not in dataset.embeddings]
+        texts_to_encode = [nlp.lemmatize(dataset.games[id]) for id in games_to_encode]
 
-        for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i:i+batch_size]
-            batch_ids = games[i:i+batch_size]
+        for i in range(0, len(texts_to_encode), batch_size):
+            batch_texts = texts_to_encode[i:i+batch_size]
+            batch_ids = games_to_encode[i:i+batch_size]
             batch_embs = model.__encode(batch_texts)
 
             for id, emb in zip(batch_ids, batch_embs):
