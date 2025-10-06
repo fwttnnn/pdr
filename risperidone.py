@@ -112,9 +112,10 @@ def test(k: int = 10):
         precision = hit / k
         return hit, ndcg, precision
 
-    hit       = 0
-    ndcg      = 0
-    precision = 0
+    hit        = 0
+    ndcg       = 0
+    precision  = 0
+    divergence = 0
     averages: dict[int, tuple | None] = {50:   None,
                                          100:  None,
                                          300:  None,
@@ -130,29 +131,31 @@ def test(k: int = 10):
         played: list[int] = [game["id"] for game in games if game["genres"][1] in genres][:PREVIOUSLY_PLAYED_GAMES_LIMIT]
         future: list[int] = [game["id"] for game in games if game["id"] not in played]
 
-        predictions = model.similar(played, k)
+        predictions, __divergence = model.__debug_similar(played, k)
         __hit, __ndcg, __precision = metrics(future, predictions)
 
-        hit       += (1 if __hit else 0)
-        ndcg      += __ndcg
-        precision += __precision
+        hit        += (1 if __hit else 0)
+        ndcg       += __ndcg
+        precision  += __precision
+        divergence += __divergence
 
         n = i + 1
         if n in averages:
-            averages[n] = (hit / n, ndcg / n, precision / n)
+            averages[n] = (hit / n, ndcg / n, precision / n, divergence / n)
 
-    users_len  = len(users)
-    hit       /= users_len
-    ndcg      /= users_len
-    precision /= users_len
-    averages[users_len] = (hit, ndcg, precision)
+    users_len   = len(users)
+    hit        /= users_len
+    ndcg       /= users_len
+    precision  /= users_len
+    divergence /= users_len
+    averages[users_len] = (hit, ndcg, precision, divergence)
 
     for n, avg in sorted(averages.items()):
         if avg is None:
             break
 
-        print(f"{n}: Average HR@{k}: {avg[0]:.2f}, Average NDCG@{k}: {avg[1]:.2f}, Average Precision@{k}: {avg[2]:.2f}")
-        print(f"{n}: Average HR@{k}: {avg[0]:.4f}, Average NDCG@{k}: {avg[1]:.4f}, Average Precision@{k}: {avg[2]:.4f}")
+        print(f"{n}: Average HR@{k}: {avg[0]:.2f}, Average NDCG@{k}: {avg[1]:.2f}, Average Precision@{k}: {avg[2]:.2f}, Average Divergence@{k}: {avg[3]:.2f}")
+        print(f"{n}: Average HR@{k}: {avg[0]:.4f}, Average NDCG@{k}: {avg[1]:.4f}, Average Precision@{k}: {avg[2]:.4f}, Average Divergence@{k}: {avg[3]:.4f}")
 
 if __name__ == "__main__":
     import argparse
@@ -172,6 +175,11 @@ if __name__ == "__main__":
         import logging
         logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
 
+    import dataset
+    import model
+    import embeddings
+    import sys
+
     match args.model:
         case "sbert":
             from models import sbert as _model
@@ -180,11 +188,7 @@ if __name__ == "__main__":
         case "w2v":
             from models import w2v as _model
 
-    import dataset
-    import model
-    import embeddings
-    import sys
-
+    _model.load()
     dataset.load()
     embeddings.precompute(_model, f"data/embeddings/{args.model}.pkl")
 

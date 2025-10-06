@@ -1,8 +1,13 @@
 from gensim.models import KeyedVectors
 import torch
 
-w2v_model_path = "GoogleNews-vectors-negative300.bin.gz"
-w2v = KeyedVectors.load_word2vec_format(w2v_model_path, binary=True)
+w2v = None
+
+def load():
+    global w2v
+    w2v_model_path = "GoogleNews-vectors-negative300.bin"
+    w2v = KeyedVectors.load_word2vec_format(w2v_model_path, binary=True)
+    return w2v
 
 def __encode(text: str) -> torch.Tensor:
     words = [w for w in text.lower().split() if w in w2v]
