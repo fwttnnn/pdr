@@ -6,7 +6,7 @@ ft = None
 def load():
     global ft
     # https://fasttext.cc/docs/en/crawl-vectors.html
-    ft_model_path = "cc.en.300.bin"
+    ft_model_path = "bin/cc.en.300.bin"
     ft = gensim.models.fasttext.load_facebook_model(ft_model_path)
     return ft
 

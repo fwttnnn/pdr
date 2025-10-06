@@ -5,7 +5,7 @@ w2v = None
 
 def load():
     global w2v
-    w2v_model_path = "GoogleNews-vectors-negative300.bin"
+    w2v_model_path = "bin/GoogleNews-vectors-negative300.bin"
     w2v = KeyedVectors.load_word2vec_format(w2v_model_path, binary=True)
     return w2v
 
