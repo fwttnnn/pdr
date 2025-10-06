@@ -22,13 +22,13 @@ def save(embeddings, path: str):
     with open(path, "wb") as f:
         pickle.dump(embeddings, f)
 
-def precompute(model: types.ModuleType, path: str):
+def generate(model: types.ModuleType, path: str):
     logger = logging.getLogger(__name__)
 
     if not dataset.embeddings:
         dataset.embeddings = load(path)
 
-    def __compute_with_gpu(batch_size=32):
+    def __with_gpu(batch_size=32):
         games_to_encode = [id for id in dataset.games.keys() if id not in dataset.embeddings]
         texts_to_encode = [nlp.lemmatize(dataset.games[id]) for id in games_to_encode]
 
@@ -40,19 +40,17 @@ def precompute(model: types.ModuleType, path: str):
             for id, emb in zip(batch_ids, batch_embs):
                 dataset.embeddings[id] = emb
     
-    def __compute_with_cpu():
-        def __compute_emb(id: int):
+    def __with_cpu():
+        def __generate(id: int):
             logger.info(f"Risperidone: generating embeddings for {id}")
             dataset.embeddings[id] = model.__encode(nlp.lemmatize(dataset.games[id]))
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
-            executor.map(__compute_emb, [id for id in dataset.games.keys() if id not in dataset.embeddings])
+            executor.map(__generate, [id for id in dataset.games.keys() if id not in dataset.embeddings])
 
-    if torch.cuda.is_available():
-        __compute_with_gpu()
-    else:
-        __compute_with_cpu()
-    
+    funct = __with_gpu if torch.cuda.is_available() else __with_cpu
+    funct()
+
     save(dataset.embeddings, path)
 
 # kinda stolen from sentence_transformer.util, credit on that
