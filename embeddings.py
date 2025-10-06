@@ -26,9 +26,13 @@ def generate(model: types.ModuleType, path: str):
     logger = logging.getLogger(__name__)
 
     if not dataset.embeddings:
+        logger.info(f"Risperidone: loading embeddings, do not force quit")
         dataset.embeddings = load(path)
+        logger.info(f"Risperidone: loaded embeddings")
 
     def __with_gpu(batch_size=32):
+        logger.info(f"Risperidone: starting to generate embeddings with GPU")
+
         games_to_encode = [id for id in dataset.games.keys() if id not in dataset.embeddings]
         texts_to_encode = [nlp.lemmatize(dataset.games[id]) for id in games_to_encode]
 
@@ -41,6 +45,8 @@ def generate(model: types.ModuleType, path: str):
                 dataset.embeddings[id] = emb
     
     def __with_cpu():
+        logger.info(f"Risperidone: starting to generate embeddings with CPU")
+
         def __generate(id: int):
             logger.info(f"Risperidone: generating embeddings for {id}")
             dataset.embeddings[id] = model.__encode(nlp.lemmatize(dataset.games[id]))
@@ -51,7 +57,10 @@ def generate(model: types.ModuleType, path: str):
     funct = __with_gpu if torch.cuda.is_available() else __with_cpu
     funct()
 
+    logger.info(f"Risperidone: generated embeeddings")
+    logger.info(f"Risperidone: saving embeddings")
     save(dataset.embeddings, path)
+    logger.info(f"Risperidone: saved embeddings")
 
 # kinda stolen from sentence_transformer.util, credit on that
 def similarity(a: torch.Tensor, b: torch.Tensor):
