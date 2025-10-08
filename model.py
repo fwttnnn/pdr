@@ -20,11 +20,20 @@ def __debug_similar(game_ids: list[int], k: int = 10) -> tuple[list[int], float]
     __embeddings = torch.stack([dataset.embeddings[g] for g in games])
     similarities = embeddings.similarity(user_embedding, __embeddings).squeeze(0).tolist()
 
+    def _metric_outliers(similarities):
+        similarities = np.array(similarities)
+        med = np.median(similarities)
+        mad = np.median(np.abs(similarities - med)) + 1e-8
+        mod_z = 0.6745 * (similarities - med) / mad
+        outlier_mask = mod_z < -3.5
+        outlier_rate = np.mean(outlier_mask)
+        return float(outlier_rate)
+
     # without squeezing, wanted to do tests
     if False:
         top_k = sorted(zip(similarities, games), key=lambda x: x[0], reverse=True)[:k]
-        divergence = float(torch.mean(torch.tensor([1 - sim for sim, _ in top_k])))
-        return [gid for _, gid in top_k], divergence
+        top_k_ids =[ gid for _, gid in top_k]
+        return top_k_ids, _metric_outliers([sim for sim, _, in top_k])
 
     def _squeeze_popularities(raw_popularities, squeeze=0.90):
         mean_p = np.mean(raw_popularities)
@@ -49,7 +58,7 @@ def __debug_similar(game_ids: list[int], k: int = 10) -> tuple[list[int], float]
         zip(similarities, popularities, games),
         key=lambda x: x[0],
         reverse=True
-    )[:k + CANDIDATE_PRE_RANK_LIMIT]
+    )[:CANDIDATE_PRE_RANK_LIMIT]
 
     predictions = [
         (COSINE_SIMILARITY_WEIGHT * sim + GAME_POPULARITY_WEIGHT * pop, sim, gid)
@@ -58,11 +67,9 @@ def __debug_similar(game_ids: list[int], k: int = 10) -> tuple[list[int], float]
     predictions = sorted(predictions, key=lambda x: x[0], reverse=True)
 
     top_k = predictions[:k]
-
-    divergence = float(torch.mean(torch.tensor([1 - sim for _, sim, _ in top_k])))
     top_k_ids = [gid for _, _, gid in top_k]
 
-    return top_k_ids, divergence
+    return top_k_ids, _metric_outliers([sim for _, sim, _ in top_k])
 
 def similar(game_ids: list[int], k: int = 10) -> list[int]:
     recommendations, _ = __debug_similar(game_ids, k)

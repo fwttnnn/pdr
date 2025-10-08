@@ -57,8 +57,8 @@ def generate(model: types.ModuleType, path: str):
     funct = __with_gpu if torch.cuda.is_available() else __with_cpu
     funct()
 
-    logger.info(f"Risperidone: generated embeeddings")
-    logger.info(f"Risperidone: saving embeddings")
+    logger.info(f"Risperidone: generated embeddings")
+    logger.info(f"Risperidone: saving embeddings, do not force quit")
     save(dataset.embeddings, path)
     logger.info(f"Risperidone: saved embeddings")
 
