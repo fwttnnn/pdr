@@ -35,7 +35,7 @@ def __debug_similar(game_ids: list[int], k: int = 10) -> tuple[list[int], float]
         top_k_ids =[ gid for _, gid in top_k]
         return top_k_ids, _metric_outliers([sim for sim, _, in top_k])
 
-    def _squeeze_popularities(raw_popularities, squeeze=0.90):
+    def _normalize_popularities(raw_popularities):
         mean_p = np.mean(raw_popularities)
         std_p  = np.std(raw_popularities) + 1e-8
 
@@ -44,11 +44,26 @@ def __debug_similar(game_ids: list[int], k: int = 10) -> tuple[list[int], float]
         min_p, max_p = min(pops), max(pops)
         pops = [(p - min_p) / (max_p - min_p + 1e-8) for p in pops]
 
-        pops = [0.5 + (p - 0.5) * squeeze for p in pops]
         return pops
+    
+    def _boost_popularities(popularities, center=0.4, width=0.4, scale=1.8):
+        """ bell curve boosting
+        """
+        assert(center >= 0 and center <= 1)
+
+        adjusted = []
+
+        for p in popularities:
+            factor = math.exp(- ((p - center) ** 2) / (2 * width ** 2))
+            _p = p * (1 + (factor - 0.5) * scale)
+            _p = max(0.0, min(1.0, _p))
+            adjusted.append(_p)
+
+        return adjusted
 
     popularities = [g["favorite"] for g in candidates]
-    popularities = _squeeze_popularities(popularities)
+    popularities = _normalize_popularities(popularities)
+    popularities = _boost_popularities(popularities)
 
     COSINE_SIMILARITY_WEIGHT = 1.00
     GAME_POPULARITY_WEIGHT   = 0.10

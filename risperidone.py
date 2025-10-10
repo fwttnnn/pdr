@@ -75,6 +75,9 @@ def test(k: int = 10):
 
     PREVIOUSLY_PLAYED_GAMES_LIMIT = 3
 
+    recommendations = []
+    truths = []
+
     def group_most_liked_genres(games: list[dict]) -> set[str]:
         from collections import Counter
 
@@ -123,6 +126,7 @@ def test(k: int = 10):
                                          1000: None}
     
     users = [user for user in dataset.users.values()]
+    # users = users[:1]
     for i, user in enumerate(users):
         history: list[int] = list(dict.fromkeys(user["favorites"] + list(dict.fromkeys(user["history"]).keys())).keys())
         games: list[dict] = [dataset.games[id] for id in history if id in dataset.games]
@@ -133,6 +137,9 @@ def test(k: int = 10):
 
         predictions, __outlier = model.__debug_similar(played, k)
         __hit, __ndcg, __precision = metrics(future, predictions)
+
+        truths.append(future)
+        recommendations.append(predictions)
 
         hit       += (1 if __hit else 0)
         ndcg      += __ndcg
@@ -157,6 +164,9 @@ def test(k: int = 10):
         print(f"{n}: HR@{k}: {avg[0]:.2f}, NDCG@{k}: {avg[1]:.2f}, Precision@{k}: {avg[2]:.2f}, Outlier@{k}: {avg[3]:.2f}")
         print(f"{n}: HR@{k}: {avg[0]:.4f}, NDCG@{k}: {avg[1]:.4f}, Precision@{k}: {avg[2]:.4f}, Outlier@{k}: {avg[3]:.4f}")
 
+    import plot
+    plot.scatter(recommendations, truths)
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(
@@ -175,6 +185,9 @@ if __name__ == "__main__":
     if args.verbose:
         import logging
         logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
+
+        import config
+        config.DEBUG = True
 
     import dataset
     import model
