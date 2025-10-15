@@ -3,6 +3,28 @@
 import matplotlib.pyplot as plt
 from collections import Counter
 
+def gaussian():
+    import math
+
+    def gaussian_fn(x, center=0.7, width=0.25):
+        return 1 + math.exp(-0.5 * ((x - center) / width) ** 2)
+
+    x = [i / 500 for i in range(501)]
+    y_a = [gaussian_fn(v, center=0.825, width=0.3) for v in x]
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(x, y_a, lw=1.5, color="#b64c69")
+
+    plt.axvline(0.825, color="black", linestyle="--", lw=1.25, label="Center")
+
+    plt.xlabel("Normalized Popularity")
+    plt.ylabel("Gaussian Multiplier")
+    plt.grid(True, linestyle="--", alpha=0.6)
+
+    plt.legend(frameon=False)
+    plt.tight_layout()
+    plt.savefig("data/plot/gaussian.png", dpi=300, bbox_inches="tight")
+
 def bar():
     import dataset
     dataset.load()
@@ -41,9 +63,6 @@ def bar():
         linewidth=1
     )
 
-    # ax.set_ylabel("Number of Experiences")
-    # plt.xticks(rotation=90, ha='right')
-
     ax.set_ylabel("Number of Experiences", fontsize=10)
     ax.tick_params(axis='x', labelrotation=90, labelsize=8)
     ax.tick_params(axis='y', labelsize=8)
@@ -56,7 +75,6 @@ def bar():
 
     plt.tight_layout()
     plt.savefig("data/plot/bar.png", dpi=300, bbox_inches="tight")
-    plt.savefig("paper/ieee/bar-genres.png", dpi=300, bbox_inches="tight")
 
 def scatter(recommendations: list[list[int]], truths: list[list[int]]):
     def _occurance(lst: list[list[int]]) -> dict[int, float]:

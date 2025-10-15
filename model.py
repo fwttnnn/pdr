@@ -46,7 +46,7 @@ def __debug_similar(game_ids: list[int], k: int = 10) -> tuple[list[int], float]
 
         return pops
     
-    def _boost_popularities(popularities, center=0.70, width=0.25, scale=1.5):
+    def _boost_popularities(popularities, center=0.825, width=0.3):
         """ bell curve boosting
         """
         assert(center >= 0 and center <= 1)
@@ -54,10 +54,8 @@ def __debug_similar(game_ids: list[int], k: int = 10) -> tuple[list[int], float]
         adjusted = []
 
         for p in popularities:
-            factor = math.exp(- ((p - center) ** 2) / (2 * width ** 2))
-            _p = p * (1 + (factor - 0.5) * scale)
-            _p = max(0.0, min(1.0, _p))
-            adjusted.append(_p)
+            p = 1 + math.exp(-0.5 * ((p - center) / width) ** 2)
+            adjusted.append(p)
 
         return adjusted
 
