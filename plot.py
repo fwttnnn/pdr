@@ -3,19 +3,96 @@
 import matplotlib.pyplot as plt
 from collections import Counter
 
+def _most_pop_experiences():
+    import dataset
+    dataset.load()
+
+    from matplotlib.colors import LinearSegmentedColormap
+    import re
+    import matplotlib.pyplot as plt
+
+    popular_experiences = sorted(
+        list(dataset.games.values()), key=lambda g: g["favorite"], reverse=True
+    )
+
+    top_n = 30
+    top = popular_experiences[:top_n]
+
+    def clean_title(game):
+        title = game["title"]
+        # Remove parentheses and brackets
+        _title = re.sub(r"\(.*?\)", "", title)
+        _title = re.sub(r"\[.*?\]", "", _title)
+        _title = _title.strip()
+        if not _title:
+            _title = title
+
+        # Append markers based on genre
+        genres = game.get("genres", [])
+        if len(genres) > 1:
+            genre_field = genres[1]
+            if "Simulation" in genre_field:
+                _title = "♣" + _title
+            elif "Obby" in genre_field:
+                _title = "♠" + _title
+
+        return _title
+
+    titles = [clean_title(g) for g in top]
+    favorites = [g["favorite"] for g in top]
+
+    # Color palette
+    palette = [
+        "#8d2448", "#b64c69", "#ce949b", "#ba9aa0", "#ce7d5f",
+        "#f2be82", "#f9dbb9", "#fcf1e3"
+    ]
+
+    colors = palette[:len(favorites)]
+    if len(favorites) > len(palette):
+        cmap = LinearSegmentedColormap.from_list("custom", palette)
+        colors = [cmap(i / (len(favorites) - 1)) for i in range(len(favorites))]
+
+    # Horizontal bar chart
+    _, ax = plt.subplots(figsize=(5, 5))
+    ax.barh(
+        titles[::-1],       # reverse to have largest on top
+        favorites[::-1],
+        color=colors[::-1],
+        edgecolor='black',
+        linewidth=1
+    )
+
+    ax.set_xlabel("Number of Favorites", fontsize=10)
+    ax.set_ylabel("Experience Title", fontsize=10)
+    ax.tick_params(axis='y', labelsize=7)
+    ax.tick_params(axis='x', labelrotation=30, labelsize=8)
+
+    max_fav = max(favorites)
+    step = max(max_fav // 9, 1)
+    ax.set_xticks(range(0, max_fav + step, step))
+    ax.grid(axis='x', linestyle='--', alpha=0.6)
+
+    plt.tight_layout()
+    plt.savefig("data/plot/bar-pop.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
 def gaussian():
     import math
 
-    def gaussian_fn(x, center=0.7, width=0.25):
+    def gaussian_fn(x, center, width):
         return 1 + math.exp(-0.5 * ((x - center) / width) ** 2)
 
     x = [i / 500 for i in range(501)]
-    y_a = [gaussian_fn(v, center=0.825, width=0.3) for v in x]
+
+    y_a = [gaussian_fn(v, center=.825, width=.3) for v in x]
+    y_b = [gaussian_fn(v, center=.665, width=.4) for v in x]
 
     plt.figure(figsize=(6, 4))
-    plt.plot(x, y_a, lw=1.5, color="#b64c69")
+    plt.plot(x, y_a, lw=1.5, color="#8d2448")
+    plt.plot(x, y_b, lw=1.5, color="#db2556")
 
-    plt.axvline(0.825, color="black", linestyle="--", lw=1.25, label="Center")
+    plt.axvline(.825, color="#8d2448", linestyle="--", lw=1.25)
+    plt.axvline(.665, color="#db2556", linestyle="--", lw=1.25)
 
     plt.xlabel("Normalized Popularity")
     plt.ylabel("Gaussian Multiplier")
@@ -127,6 +204,19 @@ def scatter(recommendations: list[list[int]], truths: list[list[int]]):
     import config
     if not config.DEBUG:
         return
+
+    for (xv, game_x), (yv, game_y) in zip(freq["x"], freq["y"]):
+        id = game_x["id"]
+        plt.text(
+            xv,
+            yv - 0.0005,
+            id,
+            fontsize=5,
+            ha="center",
+            va="top",
+            alpha=0.6,
+        )
+    plt.savefig("data/plot/scatter-debug.png", dpi=300, bbox_inches="tight")
 
     most = []
     for x, y in zip(freq["x"], freq["y"]):

@@ -59,7 +59,7 @@ def serve():
                 return starlette.responses.JSONResponse({ "error": f"Specified game '{id}' does not exist" })
 
         return starlette.responses.JSONResponse({
-            "data": [dataset.games[pred] for pred in model.similar(ids, k=n)]
+            "data": [dataset.games[pred] for pred in model.recommend(ids, k=n)]
         })
 
     uvicorn.run(starlette.applications.Starlette(debug=False, routes=[
@@ -135,7 +135,7 @@ def test(k: int = 10):
         played: list[int] = [game["id"] for game in games if game["genres"][1] in genres][:PREVIOUSLY_PLAYED_GAMES_LIMIT]
         future: list[int] = [game["id"] for game in games if game["id"] not in played]
 
-        predictions, __outlier = model.__debug_similar(played, k)
+        predictions = model.recommend(played, k)
         __hit, __ndcg, __precision = metrics(future, predictions)
 
         truths.append(future)
@@ -144,7 +144,6 @@ def test(k: int = 10):
         hit       += (1 if __hit else 0)
         ndcg      += __ndcg
         precision += __precision
-        outlier   += __outlier
 
         n = i + 1
         if n in averages:
@@ -154,15 +153,14 @@ def test(k: int = 10):
     hit       /= users_len
     ndcg      /= users_len
     precision /= users_len
-    outlier   /= users_len
-    averages[users_len] = (hit, ndcg, precision, outlier)
+    averages[users_len] = (hit, ndcg, precision)
 
     for n, avg in sorted(averages.items()):
         if avg is None:
             break
 
-        print(f"{n}: HR@{k}: {avg[0]:.2f}, NDCG@{k}: {avg[1]:.2f}, Precision@{k}: {avg[2]:.2f}, Outlier@{k}: {avg[3]:.2f}")
-        print(f"{n}: HR@{k}: {avg[0]:.4f}, NDCG@{k}: {avg[1]:.4f}, Precision@{k}: {avg[2]:.4f}, Outlier@{k}: {avg[3]:.4f}")
+        print(f"{n}: HR@{k}: {avg[0]:.2f}, NDCG@{k}: {avg[1]:.2f}, Precision@{k}: {avg[2]:.2f}")
+        print(f"{n}: HR@{k}: {avg[0]:.4f}, NDCG@{k}: {avg[1]:.4f}, Precision@{k}: {avg[2]:.4f}")
 
     import plot
     plot.scatter(recommendations, truths)
@@ -177,7 +175,7 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--verbose", action="store_true", help="turn on debugging")
     parser.add_argument("-H", "--headless", action="store_true", help="skip loading the model")
     parser.add_argument("-m", "--model",
-                        choices=["sbert", "ft", "w2v"],
+                        choices=["sbert", "st5", "ft", "w2v"],
                         default="sbert",
                         help="choose the embedding model: sbert, ft, or w2v (default: sbert)")
     args = parser.parse_args()
@@ -197,6 +195,8 @@ if __name__ == "__main__":
     match args.model:
         case "sbert":
             from models import sbert as _model
+        case "st5":
+            from models import st5 as _model
         case "ft":
             from models import ft as _model
         case "w2v":
@@ -219,6 +219,6 @@ if __name__ == "__main__":
 
     game = dataset.random(dataset.games)
     print(f"games similar to '{game['title']}' (https://roblox.com/games/{game['rpid']}):")
-    for pred in model.similar([game["id"]], k=10):
+    for pred in model.recommend([game["id"]], k=10):
         __game = dataset.games[pred]
         print(f"'{__game['title']}' (https://roblox.com/games/{__game['rpid']})")

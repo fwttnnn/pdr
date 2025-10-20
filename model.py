@@ -6,60 +6,50 @@ import torch
 import numpy as np
 import math
 
-def __debug_similar(game_ids: list[int], k: int = 10) -> tuple[list[int], float]:
+def similar(game_ids: list[int]) -> list[tuple[int, int]]:
     __set_game_ids = set(game_ids)
 
-    user_embedding = torch.mean(
-        torch.stack([dataset.embeddings[g] for g in game_ids]), dim=0
-    )
+    user_embedding = torch.mean(torch.stack([dataset.embeddings[g] for g in game_ids]), dim=0)
 
     __games_all_sorted = sorted(dataset.games.values(), key=lambda g: g["id"])
     candidates = [g for g in __games_all_sorted if g["id"] not in __set_game_ids]
-    games = [g["id"] for g in candidates]
+    games: list[int] = [g["id"] for g in candidates]
 
     __embeddings = torch.stack([dataset.embeddings[g] for g in games])
     similarities = embeddings.similarity(user_embedding, __embeddings).squeeze(0).tolist()
+    similarities = sorted(zip(similarities, games), key=lambda x: x[0], reverse=True)
 
-    def _metric_outliers(similarities):
-        similarities = np.array(similarities)
-        med = np.median(similarities)
-        mad = np.median(np.abs(similarities - med)) + 1e-8
-        mod_z = 0.6745 * (similarities - med) / mad
-        outlier_mask = mod_z < -3.5
-        outlier_rate = np.mean(outlier_mask)
-        return float(outlier_rate)
+    return similarities
 
-    # without squeezing, wanted to do tests
-    if False:
-        top_k = sorted(zip(similarities, games), key=lambda x: x[0], reverse=True)[:k]
-        top_k_ids =[ gid for _, gid in top_k]
-        return top_k_ids, _metric_outliers([sim for sim, _, in top_k])
+def rank(similarities: list[tuple[int, int]]):
+    sims: list[int]         = [sim for sim, _ in similarities]
+    games: list[object]     = [gid for _, gid in similarities]
+    popularities: list[int] = [dataset.games[gid]["favorite"] for gid in games]
 
-    def _normalize_popularities(raw_popularities):
-        mean_p = np.mean(raw_popularities)
-        std_p  = np.std(raw_popularities) + 1e-8
+    def _normalize_popularities(_popularities):
+        mean_p = np.mean(_popularities)
+        std_p  = np.std(_popularities) + 1e-8
 
-        pops = [1 / (1 + math.exp(-(p - mean_p) / (2 * std_p))) for p in raw_popularities]
+        pops = [1 / (1 + math.exp(-(p - mean_p) / (2 * std_p))) for p in _popularities]
 
         min_p, max_p = min(pops), max(pops)
         pops = [(p - min_p) / (max_p - min_p + 1e-8) for p in pops]
 
         return pops
     
-    def _boost_popularities(popularities, center=0.825, width=0.3):
+    def _boost_popularities(_popularities, center=0.665, width=0.4):
         """ bell curve boosting
         """
         assert(center >= 0 and center <= 1)
 
         adjusted = []
 
-        for p in popularities:
+        for p in _popularities:
             p = 1 + math.exp(-0.5 * ((p - center) / width) ** 2)
             adjusted.append(p)
 
         return adjusted
 
-    popularities = [g["favorite"] for g in candidates]
     popularities = _normalize_popularities(popularities)
     popularities = _boost_popularities(popularities)
 
@@ -67,23 +57,20 @@ def __debug_similar(game_ids: list[int], k: int = 10) -> tuple[list[int], float]
     GAME_POPULARITY_WEIGHT   = 0.10
     CANDIDATE_PRE_RANK_LIMIT = 500
 
-    predictions = sorted(
-        zip(similarities, popularities, games),
-        key=lambda x: x[0],
-        reverse=True
-    )[:CANDIDATE_PRE_RANK_LIMIT]
+    ranked = sorted(zip(sims, popularities, games),
+                        key=lambda x: x[0],
+                        reverse=True)[:CANDIDATE_PRE_RANK_LIMIT]
 
-    predictions = [
-        (COSINE_SIMILARITY_WEIGHT * sim + GAME_POPULARITY_WEIGHT * pop, sim, gid)
-        for sim, pop, gid in predictions
-    ]
-    predictions = sorted(predictions, key=lambda x: x[0], reverse=True)
+    ranked = [(COSINE_SIMILARITY_WEIGHT * sim + GAME_POPULARITY_WEIGHT * pop, gid)
+              for sim, pop, gid in ranked]
 
-    top_k = predictions[:k]
-    top_k_ids = [gid for _, _, gid in top_k]
+    ranked = sorted(ranked, key=lambda x: x[0], reverse=True)
+    ranked = [gid for _, gid in ranked]
 
-    return top_k_ids, _metric_outliers([sim for _, sim, _ in top_k])
+    return ranked
 
-def similar(game_ids: list[int], k: int = 10) -> list[int]:
-    recommendations, _ = __debug_similar(game_ids, k)
-    return recommendations
+def recommend(game_ids: list[int], k: int = 10) -> list[int]:
+    similarities = similar(game_ids)
+    ranked       = rank(similarities)
+
+    return ranked[:k]
