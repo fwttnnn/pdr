@@ -1,5 +1,6 @@
 import dataset
 import embeddings
+import config
 
 import torch
 
@@ -72,5 +73,8 @@ def rank(similarities: list[tuple[int, int]]):
 def recommend(game_ids: list[int], k: int = 10) -> list[int]:
     similarities = similar(game_ids)
     ranked       = rank(similarities)
+
+    if config.BASELINE:
+        return [gid for _, gid in similarities][:k]
 
     return ranked[:k]

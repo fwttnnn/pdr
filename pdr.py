@@ -173,12 +173,17 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--serve", action="store_true", help="spin up a web server")
     parser.add_argument("-t", "--test", action="store_true", help="calculate Risperidone's accuracy")
     parser.add_argument("-v", "--verbose", action="store_true", help="turn on debugging")
+    parser.add_argument("-b", "--baseline", action="store_true", help="exclusively use the raw baseline model")
     parser.add_argument("-H", "--headless", action="store_true", help="skip loading the model")
     parser.add_argument("-m", "--model",
                         choices=["sbert", "st5", "ft", "w2v"],
                         default="sbert",
                         help="choose the embedding model: sbert, ft, or w2v (default: sbert)")
     args = parser.parse_args()
+
+    if args.baseline:
+        import config
+        config.BASELINE = True
 
     if args.verbose:
         import logging
