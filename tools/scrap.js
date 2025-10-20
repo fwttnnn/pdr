@@ -6,7 +6,7 @@
     for (let i = 0; i < iteration; i++) {
         [...document.querySelectorAll('a[href^="https://www.roblox.com/games/"]')].forEach((el) => usernames.add(el.textContent.split(" reviewed ")[0]));
         container.scrollTo(0, 0);
-        console.log(`[Risperidone] iteration: ${i}`);
+        console.log(`[PDR] iteration: ${i}`);
 
         const ms = 300; // in millisecond; wait for scroll.
         await (new Promise(resolve => setTimeout(resolve, ms)));

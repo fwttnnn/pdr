@@ -26,12 +26,12 @@ def generate(model: types.ModuleType, path: str):
     logger = logging.getLogger(__name__)
 
     if not dataset.embeddings:
-        logger.info(f"Risperidone: loading embeddings, do not force quit")
+        logger.info(f"PDR: loading embeddings, do not force quit")
         dataset.embeddings = load(path)
-        logger.info(f"Risperidone: loaded embeddings")
+        logger.info(f"PDR: loaded embeddings")
 
     def __with_gpu(batch_size=32):
-        logger.info(f"Risperidone: starting to generate embeddings with GPU")
+        logger.info(f"PDR: starting to generate embeddings with GPU")
 
         games_to_encode = [id for id in dataset.games.keys() if id not in dataset.embeddings]
         texts_to_encode = [nlp.lemmatize(dataset.games[id]) for id in games_to_encode]
@@ -45,10 +45,10 @@ def generate(model: types.ModuleType, path: str):
                 dataset.embeddings[id] = emb
     
     def __with_cpu():
-        logger.info(f"Risperidone: starting to generate embeddings with CPU")
+        logger.info(f"PDR: starting to generate embeddings with CPU")
 
         def __generate(id: int):
-            logger.info(f"Risperidone: generating embeddings for {id}")
+            logger.info(f"PDR: generating embeddings for {id}")
             dataset.embeddings[id] = model.__encode(nlp.lemmatize(dataset.games[id]))
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as executor:
@@ -57,10 +57,10 @@ def generate(model: types.ModuleType, path: str):
     funct = __with_gpu if torch.cuda.is_available() else __with_cpu
     funct()
 
-    logger.info(f"Risperidone: generated embeddings")
-    logger.info(f"Risperidone: saving embeddings, do not force quit")
+    logger.info(f"PDR: generated embeddings")
+    logger.info(f"PDR: saving embeddings, do not force quit")
     save(dataset.embeddings, path)
-    logger.info(f"Risperidone: saved embeddings")
+    logger.info(f"PDR: saved embeddings")
 
 # kinda stolen from sentence_transformer.util, credit on that
 def similarity(a: torch.Tensor, b: torch.Tensor):

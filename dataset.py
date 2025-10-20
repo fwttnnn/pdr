@@ -32,7 +32,7 @@ def dump_csv(path: str, objects: list[dict], headers: list[str]):
 def load():
     logger = logging.getLogger(__name__)
 
-    logger.info(f"Risperidone: loading games csv from {CSV_GAMES_FILEPATH}")
+    logger.info(f"PDR: loading games csv from {CSV_GAMES_FILEPATH}")
     for game in load_csv(CSV_GAMES_FILEPATH):
         game["id"] = int(game["id"])
         game["rpid"] = int(game["rpid"])
@@ -40,16 +40,16 @@ def load():
         game["favorite"] = int(game["favorite"])
         game["genres"] = game["genres"].split("|")
         games[game["id"]] = game
-    logger.info(f"Risperidone: loaded games successfully")
+    logger.info(f"PDR: loaded games successfully")
 
-    logger.info(f"Risperidone: loading users csv from {CSV_USERS_FILEPATH}")
+    logger.info(f"PDR: loading users csv from {CSV_USERS_FILEPATH}")
     for user in load_csv(CSV_USERS_FILEPATH):
         user["id"] = int(user["id"])
         user["favorites"] = list(map(int, user["favorites"].split("|"))) if user["favorites"] != "" else []
         user["history"] = list(map(int, user["history"].split("|"))) if user["history"] != "" else []
         user["friends"] = list(map(int, user["friends"].split("|"))) if user["friends"] != "" else []
         users[user["id"]] = user
-    logger.info(f"Risperidone: loaded users successfully")
+    logger.info(f"PDR: loaded users successfully")
 
 def random(d: dict = games) -> dict:
     import random

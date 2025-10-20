@@ -168,10 +168,10 @@ def test(k: int = 10):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(
-                    prog="Risperidone",
+                    prog="PDR",
                     description="Recommender system for Roblox.")
     parser.add_argument("-s", "--serve", action="store_true", help="spin up a web server")
-    parser.add_argument("-t", "--test", action="store_true", help="calculate Risperidone's accuracy")
+    parser.add_argument("-t", "--test", action="store_true", help="calculate PDR's accuracy")
     parser.add_argument("-v", "--verbose", action="store_true", help="turn on debugging")
     parser.add_argument("-b", "--baseline", action="store_true", help="exclusively use the raw baseline model")
     parser.add_argument("-H", "--headless", action="store_true", help="skip loading the model")
