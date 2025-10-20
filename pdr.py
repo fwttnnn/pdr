@@ -178,7 +178,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--model",
                         choices=["sbert", "st5", "ft", "w2v"],
                         default="sbert",
-                        help="choose the embedding model: sbert, ft, or w2v (default: sbert)")
+                        help="choose the embedding model: sbert, st5, ft, or w2v (default: sbert)")
     args = parser.parse_args()
 
     if args.baseline:
