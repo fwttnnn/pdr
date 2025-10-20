@@ -37,7 +37,7 @@ def rank(similarities: list[tuple[int, int]]):
 
         return pops
     
-    def _boost_popularities(_popularities, center=0.665, width=0.4):
+    def _boost_popularities(_popularities, center=0.825, width=0.3):
         """ bell curve boosting
         """
         assert(center >= 0 and center <= 1)
