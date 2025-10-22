@@ -171,6 +171,7 @@ if __name__ == "__main__":
                     prog="PDR",
                     description="Recommender system for Roblox.")
     parser.add_argument("-s", "--serve", action="store_true", help="spin up a web server")
+    parser.add_argument("-k", "--top-k", type=int, default=10, help="top k recommended items", dest="k")
     parser.add_argument("-t", "--test", action="store_true", help="calculate PDR's accuracy")
     parser.add_argument("-v", "--verbose", action="store_true", help="turn on debugging")
     parser.add_argument("-b", "--baseline", action="store_true", help="exclusively use the raw baseline model")
@@ -219,11 +220,11 @@ if __name__ == "__main__":
         sys.exit(0)
     
     if args.test:
-        test(k=10)
+        test(k=args.k)
         sys.exit(0)
 
     game = dataset.random(dataset.games)
     print(f"games similar to '{game['title']}' (https://roblox.com/games/{game['rpid']}):")
-    for pred in model.recommend([game["id"]], k=10):
+    for pred in model.recommend([game["id"]], k=args.k):
         __game = dataset.games[pred]
         print(f"'{__game['title']}' (https://roblox.com/games/{__game['rpid']})")
