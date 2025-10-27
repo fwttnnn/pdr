@@ -1,15 +1,17 @@
 # do not call these function, not inteded to be used generally.
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+
 from collections import Counter
+
+import math
+import re
+import numpy as np
 
 def _most_pop_experiences():
     import dataset
     dataset.load()
-
-    from matplotlib.colors import LinearSegmentedColormap
-    import re
-    import matplotlib.pyplot as plt
 
     popular_experiences = sorted(
         list(dataset.games.values()), key=lambda g: g["favorite"], reverse=True
@@ -20,14 +22,12 @@ def _most_pop_experiences():
 
     def clean_title(game):
         title = game["title"]
-        # Remove parentheses and brackets
         _title = re.sub(r"\(.*?\)", "", title)
         _title = re.sub(r"\[.*?\]", "", _title)
         _title = _title.strip()
         if not _title:
             _title = title
 
-        # Append markers based on genre
         genres = game.get("genres", [])
         if len(genres) > 1:
             genre_field = genres[1]
@@ -35,13 +35,14 @@ def _most_pop_experiences():
                 _title = "♣" + _title
             elif "Obby" in genre_field:
                 _title = "♠" + _title
+            elif "Adventure" in genre_field:
+                _title = "♦" + _title
 
         return _title
 
     titles = [clean_title(g) for g in top]
     favorites = [g["favorite"] for g in top]
 
-    # Color palette
     palette = [
         "#8d2448", "#b64c69", "#ce949b", "#ba9aa0", "#ce7d5f",
         "#f2be82", "#f9dbb9", "#fcf1e3"
@@ -52,10 +53,9 @@ def _most_pop_experiences():
         cmap = LinearSegmentedColormap.from_list("custom", palette)
         colors = [cmap(i / (len(favorites) - 1)) for i in range(len(favorites))]
 
-    # Horizontal bar chart
     _, ax = plt.subplots(figsize=(5, 5))
     ax.barh(
-        titles[::-1],       # reverse to have largest on top
+        titles[::-1],
         favorites[::-1],
         color=colors[::-1],
         edgecolor='black',
@@ -76,16 +76,64 @@ def _most_pop_experiences():
     plt.savefig("data/plot/bar-pop.png", dpi=300, bbox_inches="tight")
     plt.close()
 
-def gaussian():
-    import math
+def _distrib_kumaraswamy():
+    def kumaraswamy(x, alpha, beta):
+        x = np.clip(x, 1e-6, 1-1e-6)
+        y = alpha * beta * (x ** (alpha - 1)) * ((1 - x ** alpha) ** (beta - 1))
+        y /= np.max(y)
+        return 1 + y
 
-    def gaussian_fn(x, center, width):
+    x = np.linspace(0, 1, 500)
+
+    y1 = kumaraswamy(x, 0.85, 0.85)
+    y2 = kumaraswamy(x, 1.5, 5)
+
+    plt.figure(figsize=(6,4))
+
+    plt.plot(x, y1, lw=1.5, color="#8d2448", label=f"α=0.85, β=0.85")
+    plt.plot(x, y2, lw=1.5, color="#db2556", label=f"α=1.5, β=5")
+    
+    plt.fill_between(x, 1, y1, color="#8d2448", alpha=0.2)
+    plt.fill_between(x, 1, y2, color="#db2556", alpha=0.2)
+
+    plt.xlabel("Normalized Popularity")
+    plt.ylabel("Multiplier")
+    plt.grid(True, linestyle="--", alpha=0.6)
+
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("data/plot/kumaraswamy.png", dpi=300, bbox_inches="tight")
+
+def _distrib_beta():
+    def beta_weight(popularity, alpha=2, beta=2):
+        popularity = np.clip(popularity, 1e-6, 1 - 1e-6)
+        weights = (popularity ** (alpha - 1)) * ((1 - popularity) ** (beta - 1))
+        weights /= weights.max()
+        return 1 + weights
+    
+    x = np.linspace(0, 1, 501)
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(x, beta_weight(x, 2, 5), lw=1.5, color="#8d2448", label="α=?, β=?")
+    plt.plot(x, beta_weight(x, 5, 2), lw=1.5, color="#8d2448", label="α=?, β=?")
+    plt.plot(x, beta_weight(x, .75, .75), lw=1.5, color="#db2556", label="α=?, β=?")
+    plt.plot(x, beta_weight(x, .85, .85), lw=1.5, color="#db2556", label="α=?, β=?")
+
+    plt.xlabel("Normalized Popularity")
+    plt.ylabel("Beta Multiplier")
+    plt.grid(True, linestyle="--", alpha=0.6)
+    plt.legend(frameon=False)
+    plt.tight_layout()
+    plt.savefig("data/plot/beta.png", dpi=300, bbox_inches="tight")
+
+def _distrib_gaussian():
+    def gaussian(x, center, width):
         return 1 + math.exp(-0.5 * ((x - center) / width) ** 2)
 
     x = [i / 500 for i in range(501)]
 
-    y_a = [gaussian_fn(v, center=.825, width=.3) for v in x]
-    y_b = [gaussian_fn(v, center=.665, width=.4) for v in x]
+    y_a = [gaussian(v, center=.825, width=.3) for v in x]
+    y_b = [gaussian(v, center=.665, width=.4) for v in x]
 
     plt.figure(figsize=(6, 4))
     plt.plot(x, y_a, lw=1.5, color="#8d2448")
@@ -98,7 +146,7 @@ def gaussian():
     plt.ylabel("Gaussian Multiplier")
     plt.grid(True, linestyle="--", alpha=0.6)
 
-    plt.legend(frameon=False)
+    plt.legend()
     plt.tight_layout()
     plt.savefig("data/plot/gaussian.png", dpi=300, bbox_inches="tight")
 
